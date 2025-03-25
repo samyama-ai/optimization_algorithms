@@ -1,4 +1,4 @@
-from .algorithms import BMR_algorithm, BWR_algorithm
+from .algorithms import BMR_algorithm, BWR_algorithm, Jaya_algorithm, Rao1_algorithm, Rao2_algorithm, Rao3_algorithm, TLBO_algorithm
 from .optimization import run_optimization, save_convergence_curve
 from .objective_functions import (
     objective_function, 
@@ -16,6 +16,11 @@ from .objective_functions import (
 __all__ = [
     'BMR_algorithm',
     'BWR_algorithm',
+    'Jaya_algorithm',
+    'Rao1_algorithm',
+    'Rao2_algorithm',
+    'Rao3_algorithm',
+    'TLBO_algorithm',
     'run_optimization',
     'save_convergence_curve',
     'objective_function',
