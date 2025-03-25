@@ -9,6 +9,10 @@ This section provides detailed documentation for all the optimization algorithms
 - [Jaya Algorithm](jaya.md): A parameter-free algorithm that always tries to move toward the best solution and away from the worst solution.
 - [Rao Algorithms (Rao-1, Rao-2, Rao-3)](rao.md): Three metaphor-less algorithms that use different strategies to guide the search process.
 - [TLBO (Teaching-Learning-Based Optimization)](tlbo.md): A parameter-free algorithm inspired by the teaching-learning process in a classroom.
+- [QOJAYA (Quasi-Oppositional Jaya)](qojaya.md): An enhanced version of Jaya that incorporates quasi-oppositional learning for improved convergence.
+- [GOTLBO (Generalized Oppositional TLBO)](gotlbo.md): An enhanced version of TLBO that incorporates oppositional-based learning to improve convergence.
+- [ITLBO (Improved TLBO)](itlbo.md): An enhanced version of TLBO with adaptive teaching factors and elitism for better performance.
+- [Multi-objective TLBO](multiobjective_tlbo.md): An extension of TLBO for solving problems with multiple competing objectives.
 
 ## Algorithm Comparison
 
@@ -23,6 +27,10 @@ The following table provides a comparison of the key features of the implemented
 | Rao-2     | Yes           | Best, Worst, and Average fitness | Uses fitness comparison with average |
 | Rao-3     | Yes           | Best solution and phase factor | Decreasing influence of best solution over time |
 | TLBO      | Yes           | Teacher-Student learning process | Two-phase approach with good performance on large-scale problems |
+| QOJAYA    | Yes           | Jaya with quasi-oppositional learning | Enhanced exploration with improved convergence |
+| GOTLBO    | Yes           | TLBO with oppositional-based learning | Better exploration and faster convergence |
+| ITLBO     | Yes           | TLBO with adaptive teaching factors | Improved convergence with elite influence |
+| MO-TLBO   | Yes           | TLBO with Pareto dominance | Handles multiple competing objectives |
 
 ## Convergence Comparison
 
@@ -46,5 +54,9 @@ The convergence speed and solution quality of these algorithms can vary dependin
 - **Rao-2**: Useful when the average fitness of the population provides meaningful guidance.
 - **Rao-3**: Effective when you want a decreasing influence of the best solution over time.
 - **TLBO**: Excellent for large-scale problems and when you want a two-phase approach to optimization.
+- **QOJAYA**: When you need better exploration capabilities than standard Jaya, especially for multimodal problems.
+- **GOTLBO**: When you need faster convergence than standard TLBO for complex problems.
+- **ITLBO**: When you need better solution quality than standard TLBO, especially for constrained problems.
+- **MO-TLBO**: When you have multiple competing objectives and need a set of trade-off solutions.
 
-For most problems, it is recommended to start with Jaya or TLBO due to their parameter-free nature and good general performance, then try the other algorithms if needed.
+For most single-objective problems, it is recommended to start with Jaya, TLBO, or their enhanced versions (QOJAYA, GOTLBO, ITLBO) due to their parameter-free nature and good general performance. For multi-objective problems, MO-TLBO is the recommended choice.

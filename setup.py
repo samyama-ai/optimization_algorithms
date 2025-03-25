@@ -8,8 +8,8 @@ def read_file(filename):
 
 setup(
     name='rao_algorithms',
-    version='0.3.0',
-    author='Samdeep Kunkunuru',
+    version='0.5.0',
+    author='Sandeep Kunkunuru',
     author_email='sandeep.kunkunuru@gmail.com',
     description='Optimization algorithms by Prof. R.V. Rao with constraint handling',
     long_description=read_file("README.md"),  # Load README.md as the long description

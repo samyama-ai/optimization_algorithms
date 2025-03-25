@@ -6,6 +6,10 @@ This package implements several powerful optimization algorithms developed by Pr
 - **Jaya Algorithm**
 - **Rao Algorithms (Rao-1, Rao-2, Rao-3)**
 - **TLBO (Teaching-Learning-Based Optimization) Algorithm**
+- **QOJAYA (Quasi-Oppositional Jaya) Algorithm**
+- **GOTLBO (Generalized Oppositional TLBO) Algorithm**
+- **ITLBO (Improved TLBO) Algorithm**
+- **Multi-objective TLBO Algorithm**
 
 These algorithms are designed to solve both **constrained** and **unconstrained** optimization problems without relying on metaphors or algorithm-specific parameters. The BMR and BWR algorithms are based on the paper:
 
@@ -17,6 +21,7 @@ These algorithms are designed to solve both **constrained** and **unconstrained*
 - **Simple**: Most algorithms have no algorithm-specific parameters to tune.
 - **Flexible**: Handles both constrained and unconstrained optimization problems.
 - **Versatile**: Includes a variety of algorithms suitable for different types of optimization problems.
+- **Multi-objective Optimization**: Support for problems with multiple competing objectives.
   
 ## Installation
 
@@ -123,6 +128,106 @@ best_solution_rao3, best_scores_rao3 = Rao3_algorithm(bounds, num_iterations, po
 print(f"Rao-3 Best solution found: {best_solution_rao3}")
 ```
 
+### Example: QOJAYA Algorithm
+
+```python
+import numpy as np
+from rao_algorithms import QOJAYA_algorithm, objective_function
+
+# Unconstrained QOJAYA
+# -------------------
+# Define the bounds for a 2D problem
+bounds = np.array([[-100, 100]] * 2)
+
+# Set parameters
+num_iterations = 100
+population_size = 50
+num_variables = 2
+
+# Run the QOJAYA algorithm
+best_solution, best_scores = QOJAYA_algorithm(bounds, num_iterations, population_size, num_variables, objective_function)
+print(f"QOJAYA Best solution found: {best_solution}")
+```
+
+### Example: GOTLBO Algorithm
+
+```python
+import numpy as np
+from rao_algorithms import GOTLBO_algorithm, objective_function
+
+# Unconstrained GOTLBO
+# -------------------
+# Define the bounds for a 2D problem
+bounds = np.array([[-100, 100]] * 2)
+
+# Set parameters
+num_iterations = 100
+population_size = 50
+num_variables = 2
+
+# Run the GOTLBO algorithm
+best_solution, best_scores = GOTLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_function)
+print(f"GOTLBO Best solution found: {best_solution}")
+```
+
+### Example: ITLBO Algorithm
+
+```python
+import numpy as np
+from rao_algorithms import ITLBO_algorithm, objective_function
+
+# Unconstrained ITLBO
+# ------------------
+# Define the bounds for a 2D problem
+bounds = np.array([[-100, 100]] * 2)
+
+# Set parameters
+num_iterations = 100
+population_size = 50
+num_variables = 2
+
+# Run the ITLBO algorithm
+best_solution, best_scores = ITLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_function)
+print(f"ITLBO Best solution found: {best_solution}")
+```
+
+### Example: Multi-objective TLBO Algorithm
+
+```python
+import numpy as np
+from rao_algorithms import MultiObjective_TLBO_algorithm
+
+# Define two objective functions
+def objective_function1(x):
+    return np.sum(x**2)  # Minimize the sum of squares
+
+def objective_function2(x):
+    return np.sum((x-2)**2)  # Minimize the sum of squares from point (2,2,...)
+
+# Multi-objective TLBO
+# -------------------
+# Define the bounds for a 2D problem
+bounds = np.array([[-100, 100]] * 2)
+
+# Set parameters
+num_iterations = 100
+population_size = 50
+num_variables = 2
+
+# Run the Multi-objective TLBO algorithm
+pareto_front, pareto_fitness, best_scores_history = MultiObjective_TLBO_algorithm(
+    bounds, 
+    num_iterations, 
+    population_size, 
+    num_variables, 
+    [objective_function1, objective_function2]
+)
+
+print(f"Number of solutions in Pareto front: {len(pareto_front)}")
+print(f"First Pareto optimal solution: {pareto_front[0]}")
+print(f"Corresponding objective values: {pareto_fitness[0]}")
+```
+
 ### Unit Testing
 
 This package comes with unit tests. To run the tests:
@@ -173,6 +278,34 @@ TLBO is a parameter-free algorithm inspired by the teaching-learning process in 
 
 - **Paper Citation**: R. V. Rao, V. J. Savsani, D. P. Vakharia, "Teaching-Learning-Based Optimization: An optimization method for continuous non-linear large scale problems", Information Sciences, 183(1), 2012, 1-15.
 
+### QOJAYA (Quasi-Oppositional Jaya) Algorithm
+
+QOJAYA enhances the standard Jaya algorithm by incorporating quasi-oppositional learning to improve convergence speed and solution quality. It generates and evaluates quasi-opposite solutions alongside the standard Jaya updates.
+
+- **Paper Citation**: R. V. Rao, D. P. Rai, "Optimization of welding processes using quasi-oppositional-based Jaya algorithm", Journal of Mechanical Science and Technology, 31(5), 2017, 2513-2522.
+- **Real-world Application**: The algorithm has been successfully applied to optimize welding processes, including tungsten inert gas (TIG) welding and friction stir welding. It determines optimal parameters like welding current, voltage, and speed to maximize weld strength while minimizing defects.
+
+### GOTLBO (Generalized Oppositional TLBO) Algorithm
+
+GOTLBO combines TLBO with generalized opposition-based learning to enhance exploration capabilities and convergence speed. It applies opposition in both teacher and learner phases.
+
+- **Paper Citation**: R. V. Rao, V. Patel, "An improved teaching-learning-based optimization algorithm for solving unconstrained optimization problems", Scientia Iranica, 20(3), 2013, 710-720.
+- **Real-world Application**: GOTLBO has been applied to mechanical design optimization problems, including the design of pressure vessels, spring design, and gear train design. It effectively finds optimal dimensions and parameters that minimize weight while satisfying safety constraints.
+
+### ITLBO (Improved TLBO) Algorithm
+
+ITLBO enhances the standard TLBO algorithm with an adaptive teaching factor, elite solution influence, and three-way interaction in the learner phase.
+
+- **Paper Citation**: R. V. Rao, V. Patel, "An elitist teaching-learning-based optimization algorithm for solving complex constrained optimization problems", International Journal of Industrial Engineering Computations, 3(4), 2012, 535-560.
+- **Real-world Application**: ITLBO has been successfully applied to optimize heat exchangers, finding the optimal design parameters that maximize heat transfer while minimizing pressure drop and material costs. It has also been used for power system optimization to minimize generation costs and transmission losses.
+
+### Multi-objective TLBO Algorithm
+
+Multi-objective TLBO extends TLBO to handle multiple competing objectives using Pareto dominance and crowding distance for selection. It returns a set of non-dominated solutions (Pareto front).
+
+- **Paper Citation**: R. V. Rao, V. D. Kalyankar, "Multi-objective TLBO algorithm for optimization of modern machining processes", Advances in Intelligent Systems and Computing, 236, 2014, 21-31.
+- **Real-world Application**: The algorithm has been applied to optimize machining processes like turning, milling, and grinding operations. It simultaneously optimizes multiple objectives such as surface roughness, material removal rate, and tool wear, helping manufacturers achieve high-quality parts with efficient production.
+
 ## Docker Support
 
 You can use the included `Dockerfile` to build and test the package quickly. To build and run the package in Docker:
@@ -192,3 +325,7 @@ This package is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 2. Ravipudi Venkata Rao, "Jaya: A simple and new optimization algorithm for solving constrained and unconstrained optimization problems", International Journal of Industrial Engineering Computations, 7(1), 2016, 19-34.
 3. Ravipudi Venkata Rao, "Rao algorithms: Three metaphor-less simple algorithms for solving optimization problems", International Journal of Industrial Engineering Computations, 11(2), 2020, 193-212.
 4. Ravipudi Venkata Rao, V. J. Savsani, D. P. Vakharia, "Teaching-Learning-Based Optimization: An optimization method for continuous non-linear large scale problems", Information Sciences, 183(1), 2012, 1-15.
+5. Ravipudi Venkata Rao, D. P. Rai, "Optimization of welding processes using quasi-oppositional-based Jaya algorithm", Journal of Mechanical Science and Technology, 31(5), 2017, 2513-2522.
+6. Ravipudi Venkata Rao, V. Patel, "An improved teaching-learning-based optimization algorithm for solving unconstrained optimization problems", Scientia Iranica, 20(3), 2013, 710-720.
+7. Ravipudi Venkata Rao, V. Patel, "An elitist teaching-learning-based optimization algorithm for solving complex constrained optimization problems", International Journal of Industrial Engineering Computations, 3(4), 2012, 535-560.
+8. Ravipudi Venkata Rao, V. D. Kalyankar, "Multi-objective TLBO algorithm for optimization of modern machining processes", Advances in Intelligent Systems and Computing, 236, 2014, 21-31.
