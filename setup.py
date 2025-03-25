@@ -8,10 +8,10 @@ def read_file(filename):
 
 setup(
     name='rao_algorithms',
-    version='0.2.1',
+    version='0.3.0',
     author='Samdeep Kunkunuru',
     author_email='sandeep.kunkunuru@gmail.com',
-    description='BMR and BWR optimization algorithms with constraint handling',
+    description='Optimization algorithms by Prof. R.V. Rao with constraint handling',
     long_description=read_file("README.md"),  # Load README.md as the long description
     long_description_content_type='text/markdown',  # Specify the format of the long description
     url='https://github.com/VaidhyaMegha/optimization_algorithms',  # URL to GitHub repo
