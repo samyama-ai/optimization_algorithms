@@ -54,14 +54,60 @@ from rao_algorithms import run_optimization, BMR_algorithm, objective_function, 
 
 # Constrained BMR
 # ---------------
+# Define the bounds for a 2D problem
 bounds = np.array([[-100, 100]] * 2)
+
+# Set parameters
 num_iterations = 100
 population_size = 50
+num_variables = 2
+
+# Define constraints
 constraints = [constraint_1, constraint_2]
 
-best_solution, best_scores = run_optimization(BMR_algorithm, bounds, num_iterations, population_size, 2, objective_function, constraints)
-print(f"Constrained BMR Best solution: {best_solution}")
+# Run the BMR algorithm
+best_solution, convergence_history = run_optimization(
+    BMR_algorithm, 
+    bounds, 
+    num_iterations, 
+    population_size, 
+    num_variables, 
+    objective_function, 
+    constraints,
+    track_history=True  # Enable detailed convergence history tracking
+)
 
+# Access the convergence history
+best_scores = convergence_history['best_scores']
+best_solutions = convergence_history['best_solutions']
+population_diversity = convergence_history['population_diversity']
+iteration_times = convergence_history['iteration_times']
+
+# Print the best solution and score
+print(f"Best solution: {best_solution}")
+print(f"Best score: {best_scores[-1]}")
+print(f"Average iteration time: {np.mean(iteration_times)} seconds")
+```
+
+### Example: Unconstrained BWR Algorithm
+
+```python
+import numpy as np
+from rao_algorithms import BWR_algorithm, objective_function
+
+# Unconstrained BWR
+# -----------------
+# Define the bounds for a 2D problem
+bounds = np.array([[-100, 100]] * 2)
+
+# Set parameters
+num_iterations = 100
+population_size = 50
+num_variables = 2
+
+# Run the BWR algorithm
+best_solution, best_scores = BWR_algorithm(bounds, num_iterations, population_size, num_variables, objective_function)
+print(f"BWR Best solution found: {best_solution}")
 ```
 
 ### Example: Jaya Algorithm
@@ -310,6 +356,15 @@ Multi-objective TLBO extends TLBO to handle multiple competing objectives using 
 
 - **Paper Citation**: R. V. Rao, V. D. Kalyankar, "Multi-objective TLBO algorithm for optimization of modern machining processes", Advances in Intelligent Systems and Computing, 236, 2014, 21-31.
 - **Real-world Application**: The algorithm has been applied to optimize machining processes like turning, milling, and grinding operations. It simultaneously optimizes multiple objectives such as surface roughness, material removal rate, and tool wear, helping manufacturers achieve high-quality parts with efficient production.
+
+## Convergence History Tracking
+
+The `run_optimization` function now supports tracking the convergence history of the optimization process. This feature can be enabled by setting the `track_history` parameter to `True`. The convergence history is returned as a dictionary containing the following keys:
+
+- `best_scores`: A list of the best scores found at each iteration.
+- `best_solutions`: A list of the best solutions found at each iteration.
+- `population_diversity`: A list of the population diversity at each iteration.
+- `iteration_times`: A list of the time taken by each iteration.
 
 ## Docker Support
 

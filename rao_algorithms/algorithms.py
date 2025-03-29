@@ -1,22 +1,99 @@
 import numpy as np
 from .penalty import constrained_objective_function
 
-def BMR_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None):
+def BMR_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
+    """
+    Implementation of the Best-Mean-Random (BMR) algorithm by R.V. Rao.
+    
+    BMR is a simple, metaphor-free optimization algorithm that uses the best solution,
+    mean solution, and a random solution to guide the search process.
+    
+    Reference: Ravipudi Venkata Rao and Ravikumar Shah (2024), "BMR and BWR: Two simple metaphor-free 
+    optimization algorithms for solving real-life non-convex constrained and unconstrained problems."
+    
+    Parameters:
+    -----------
+    bounds : numpy.ndarray
+        Bounds for each variable, shape (num_variables, 2)
+    num_iterations : int
+        Number of iterations to run the algorithm
+    population_size : int
+        Size of the population
+    num_variables : int
+        Number of variables in the optimization problem
+    objective_func : function
+        Objective function to minimize
+    constraints : list, optional
+        List of constraint functions
+    track_history : bool, optional
+        Whether to track detailed convergence history (default: True)
+        
+    Returns:
+    --------
+    best_solution : numpy.ndarray
+        Best solution found
+    best_scores : list
+        Best score in each iteration (returned if track_history is False)
+    convergence_history : dict
+        Detailed convergence history (returned if track_history is True)
+    """
     population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
 
+    # Initialize history tracking
     best_scores = []
+    if track_history:
+        convergence_history = {
+            'best_scores': [],
+            'best_solutions': [],
+            'mean_scores': [],
+            'population_diversity': [],
+            'iteration_times': []
+        }
+    
+    # Track the global best solution across all iterations
+    global_best_solution = None
+    global_best_score = float('inf')
 
     for iteration in range(num_iterations):
+        # Start timing this iteration if tracking history
+        if track_history:
+            import time
+            start_time = time.time()
+        
+        # Evaluate fitness
         if constraints:
             fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
         else:
             fitness = np.apply_along_axis(objective_func, 1, population)
 
-        best_solution = population[np.argmin(fitness)]
+        # Get best solution and score for this iteration
+        best_idx = np.argmin(fitness)
+        best_solution = population[best_idx].copy()
         mean_solution = np.mean(population, axis=0)
-        best_score = np.min(fitness)
+        best_score = fitness[best_idx]
+        
+        # Update global best if better
+        if best_score < global_best_score:
+            global_best_solution = best_solution.copy()
+            global_best_score = best_score
+        
+        # Track history
         best_scores.append(best_score)
+        if track_history:
+            convergence_history['best_scores'].append(best_score)
+            convergence_history['best_solutions'].append(best_solution.copy())
+            convergence_history['mean_scores'].append(np.mean(fitness))
+            
+            # Calculate population diversity (mean pairwise Euclidean distance)
+            diversity = 0
+            if population_size > 1:
+                for i in range(population_size):
+                    for j in range(i+1, population_size):
+                        diversity += np.linalg.norm(population[i] - population[j])
+                diversity /= (population_size * (population_size - 1) / 2)
+            convergence_history['population_diversity'].append(diversity)
 
+        # Update population
         for i in range(population_size):
             r1, r2, r3, r4 = np.random.rand(4)
             T = np.random.choice([1, 2])
@@ -27,27 +104,118 @@ def BMR_algorithm(bounds, num_iterations, population_size, num_variables, object
             else:
                 population[i] = bounds[:, 1] - (bounds[:, 1] - bounds[:, 0]) * r3
 
+        # Clip to bounds
         population = np.clip(population, bounds[:, 0], bounds[:, 1])
+        
+        # End timing for this iteration
+        if track_history:
+            end_time = time.time()
+            convergence_history['iteration_times'].append(end_time - start_time)
 
-    return best_solution, best_scores
+    # Return appropriate results based on track_history flag
+    if track_history:
+        return global_best_solution, best_scores, convergence_history
+    else:
+        return global_best_solution, best_scores
 
 
-def BWR_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None):
+def BWR_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
+    """
+    Implementation of the Best-Worst-Random (BWR) algorithm by R.V. Rao.
+    
+    BWR is a simple, metaphor-free optimization algorithm that uses the best solution,
+    worst solution, and a random solution to guide the search process.
+    
+    Reference: Ravipudi Venkata Rao and Ravikumar Shah (2024), "BMR and BWR: Two simple metaphor-free 
+    optimization algorithms for solving real-life non-convex constrained and unconstrained problems."
+    
+    Parameters:
+    -----------
+    bounds : numpy.ndarray
+        Bounds for each variable, shape (num_variables, 2)
+    num_iterations : int
+        Number of iterations to run the algorithm
+    population_size : int
+        Size of the population
+    num_variables : int
+        Number of variables in the optimization problem
+    objective_func : function
+        Objective function to minimize
+    constraints : list, optional
+        List of constraint functions
+    track_history : bool, optional
+        Whether to track detailed convergence history (default: True)
+        
+    Returns:
+    --------
+    best_solution : numpy.ndarray
+        Best solution found
+    best_scores : list
+        Best score in each iteration (returned if track_history is False)
+    convergence_history : dict
+        Detailed convergence history (returned if track_history is True)
+    """
     population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
 
+    # Initialize history tracking
     best_scores = []
+    if track_history:
+        convergence_history = {
+            'best_scores': [],
+            'best_solutions': [],
+            'worst_scores': [],
+            'mean_scores': [],
+            'population_diversity': [],
+            'iteration_times': []
+        }
+    
+    # Track the global best solution across all iterations
+    global_best_solution = None
+    global_best_score = float('inf')
 
     for iteration in range(num_iterations):
+        # Start timing this iteration if tracking history
+        if track_history:
+            import time
+            start_time = time.time()
+        
+        # Evaluate fitness
         if constraints:
             fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
         else:
             fitness = np.apply_along_axis(objective_func, 1, population)
 
-        best_solution = population[np.argmin(fitness)]
-        worst_solution = population[np.argmax(fitness)]
-        best_score = np.min(fitness)
+        # Get best and worst solutions for this iteration
+        best_idx = np.argmin(fitness)
+        worst_idx = np.argmax(fitness)
+        best_solution = population[best_idx].copy()
+        worst_solution = population[worst_idx].copy()
+        best_score = fitness[best_idx]
+        worst_score = fitness[worst_idx]
+        
+        # Update global best if better
+        if best_score < global_best_score:
+            global_best_solution = best_solution.copy()
+            global_best_score = best_score
+        
+        # Track history
         best_scores.append(best_score)
+        if track_history:
+            convergence_history['best_scores'].append(best_score)
+            convergence_history['best_solutions'].append(best_solution.copy())
+            convergence_history['worst_scores'].append(worst_score)
+            convergence_history['mean_scores'].append(np.mean(fitness))
+            
+            # Calculate population diversity (mean pairwise Euclidean distance)
+            diversity = 0
+            if population_size > 1:
+                for i in range(population_size):
+                    for j in range(i+1, population_size):
+                        diversity += np.linalg.norm(population[i] - population[j])
+                diversity /= (population_size * (population_size - 1) / 2)
+            convergence_history['population_diversity'].append(diversity)
 
+        # Update population
         for i in range(population_size):
             r1, r2, r3, r4 = np.random.rand(4)
             T = np.random.choice([1, 2])
@@ -58,12 +226,22 @@ def BWR_algorithm(bounds, num_iterations, population_size, num_variables, object
             else:
                 population[i] = bounds[:, 1] - (bounds[:, 1] - bounds[:, 0]) * r3
 
+        # Clip to bounds
         population = np.clip(population, bounds[:, 0], bounds[:, 1])
+        
+        # End timing for this iteration
+        if track_history:
+            end_time = time.time()
+            convergence_history['iteration_times'].append(end_time - start_time)
 
-    return best_solution, best_scores
+    # Return appropriate results based on track_history flag
+    if track_history:
+        return global_best_solution, best_scores, convergence_history
+    else:
+        return global_best_solution, best_scores
 
 
-def Jaya_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None):
+def Jaya_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     """
     Implementation of the Jaya algorithm by R.V. Rao.
     
@@ -72,52 +250,128 @@ def Jaya_algorithm(bounds, num_iterations, population_size, num_variables, objec
     
     Reference: R.V. Rao, "Jaya: A simple and new optimization algorithm for solving constrained and unconstrained 
     optimization problems", International Journal of Industrial Engineering Computations, 7(1), 2016, 19-34.
+    
+    Parameters:
+    -----------
+    bounds : numpy.ndarray
+        Bounds for each variable, shape (num_variables, 2)
+    num_iterations : int
+        Number of iterations to run the algorithm
+    population_size : int
+        Size of the population
+    num_variables : int
+        Number of variables in the optimization problem
+    objective_func : function
+        Objective function to minimize
+    constraints : list, optional
+        List of constraint functions
+    track_history : bool, optional
+        Whether to track detailed convergence history (default: True)
+        
+    Returns:
+    --------
+    best_solution : numpy.ndarray
+        Best solution found
+    best_scores : list
+        Best score in each iteration (returned if track_history is False)
+    convergence_history : dict
+        Detailed convergence history (returned if track_history is True)
     """
-    # Initialize population randomly within bounds
     population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
     
+    # Initialize history tracking
     best_scores = []
+    if track_history:
+        convergence_history = {
+            'best_scores': [],
+            'best_solutions': [],
+            'worst_scores': [],
+            'mean_scores': [],
+            'population_diversity': [],
+            'iteration_times': []
+        }
     
+    # Track the global best solution across all iterations
+    global_best_solution = None
+    global_best_score = float('inf')
+
     for iteration in range(num_iterations):
-        # Evaluate fitness with constraints if provided
+        # Start timing this iteration if tracking history
+        if track_history:
+            import time
+            start_time = time.time()
+        
+        # Evaluate fitness
         if constraints:
             fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
         else:
             fitness = np.apply_along_axis(objective_func, 1, population)
         
-        # Identify best and worst solutions
+        # Get best and worst solutions for this iteration
         best_idx = np.argmin(fitness)
         worst_idx = np.argmax(fitness)
-        best_solution = population[best_idx]
-        worst_solution = population[worst_idx]
+        best_solution = population[best_idx].copy()
+        worst_solution = population[worst_idx].copy()
+        best_score = fitness[best_idx]
+        worst_score = fitness[worst_idx]
         
-        # Record best score
-        best_score = np.min(fitness)
+        # Update global best if better
+        if best_score < global_best_score:
+            global_best_solution = best_solution.copy()
+            global_best_score = best_score
+        
+        # Track history
         best_scores.append(best_score)
+        if track_history:
+            convergence_history['best_scores'].append(best_score)
+            convergence_history['best_solutions'].append(best_solution.copy())
+            convergence_history['worst_scores'].append(worst_score)
+            convergence_history['mean_scores'].append(np.mean(fitness))
+            
+            # Calculate population diversity (mean pairwise Euclidean distance)
+            diversity = 0
+            if population_size > 1:
+                for i in range(population_size):
+                    for j in range(i+1, population_size):
+                        diversity += np.linalg.norm(population[i] - population[j])
+                diversity /= (population_size * (population_size - 1) / 2)
+            convergence_history['population_diversity'].append(diversity)
         
-        # Update each solution
+        # Update population
+        new_population = np.zeros_like(population)
         for i in range(population_size):
             r1 = np.random.rand(num_variables)
             r2 = np.random.rand(num_variables)
             
-            # Jaya update rule: move toward best and away from worst
-            population[i] = population[i] + r1 * (best_solution - np.abs(population[i])) - r2 * (worst_solution - np.abs(population[i]))
+            # Move toward best and away from worst
+            new_solution = population[i] + r1 * (best_solution - np.abs(population[i])) - r2 * (worst_solution - np.abs(population[i]))
+            
+            # Ensure bounds are respected
+            new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
+            
+            # Evaluate new solution
+            if constraints:
+                new_fitness = constrained_objective_function(new_solution, objective_func, constraints)
+            else:
+                new_fitness = objective_func(new_solution)
+            
+            # Keep the better solution
+            if new_fitness < fitness[i]:
+                population[i] = new_solution
         
-        # Clip solutions to stay within bounds
-        population = np.clip(population, bounds[:, 0], bounds[:, 1])
-    
-    # Find the best solution in the final population
-    if constraints:
-        final_fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
+        # End timing for this iteration
+        if track_history:
+            end_time = time.time()
+            convergence_history['iteration_times'].append(end_time - start_time)
+
+    # Return appropriate results based on track_history flag
+    if track_history:
+        return global_best_solution, best_scores, convergence_history
     else:
-        final_fitness = np.apply_along_axis(objective_func, 1, population)
-    
-    best_solution = population[np.argmin(final_fitness)]
-    
-    return best_solution, best_scores
+        return global_best_solution, best_scores
 
 
-def Rao1_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None):
+def Rao1_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     """
     Implementation of the Rao-1 algorithm by R.V. Rao.
     
@@ -125,57 +379,115 @@ def Rao1_algorithm(bounds, num_iterations, population_size, num_variables, objec
     
     Reference: R.V. Rao, "Rao algorithms: Three metaphor-less simple algorithms for solving optimization problems",
     International Journal of Industrial Engineering Computations, 11(2), 2020, 193-212.
+    
+    Parameters:
+    -----------
+    bounds : numpy.ndarray
+        Bounds for each variable, shape (num_variables, 2)
+    num_iterations : int
+        Number of iterations to run the algorithm
+    population_size : int
+        Size of the population
+    num_variables : int
+        Number of variables in the optimization problem
+    objective_func : function
+        Objective function to minimize
+    constraints : list, optional
+        List of constraint functions
+    track_history : bool, optional
+        Whether to track detailed convergence history (default: True)
+        
+    Returns:
+    --------
+    best_solution : numpy.ndarray
+        Best solution found
+    best_scores : list
+        Best score in each iteration (returned if track_history is False)
+    convergence_history : dict
+        Detailed convergence history (returned if track_history is True)
     """
-    # Initialize population randomly within bounds
+    # Initialize population
     population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
     
+    # Initialize history tracking
     best_scores = []
+    if track_history:
+        convergence_history = {
+            'best_scores': [],
+            'best_solutions': [],
+            'mean_scores': [],
+            'population_diversity': [],
+            'iteration_times': []
+        }
+    
+    # Track the global best solution across all iterations
+    global_best_solution = None
+    global_best_score = float('inf')
     
     for iteration in range(num_iterations):
-        # Evaluate fitness with constraints if provided
+        # Start timing this iteration if tracking history
+        if track_history:
+            import time
+            start_time = time.time()
+        
+        # Evaluate fitness
         if constraints:
             fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
         else:
             fitness = np.apply_along_axis(objective_func, 1, population)
         
-        # Identify best solution
+        # Get best solution and score for this iteration
         best_idx = np.argmin(fitness)
-        best_solution = population[best_idx]
-        
-        # Record best score
+        best_solution = population[best_idx].copy()
         best_score = fitness[best_idx]
-        best_scores.append(best_score)
         
-        # Update each solution
+        # Update global best if better
+        if best_score < global_best_score:
+            global_best_solution = best_solution.copy()
+            global_best_score = best_score
+        
+        # Track history
+        best_scores.append(best_score)
+        if track_history:
+            convergence_history['best_scores'].append(best_score)
+            convergence_history['best_solutions'].append(best_solution.copy())
+            convergence_history['mean_scores'].append(np.mean(fitness))
+            
+            # Calculate population diversity (mean pairwise Euclidean distance)
+            diversity = 0
+            if population_size > 1:
+                for i in range(population_size):
+                    for j in range(i+1, population_size):
+                        diversity += np.linalg.norm(population[i] - population[j])
+                diversity /= (population_size * (population_size - 1) / 2)
+            convergence_history['population_diversity'].append(diversity)
+        
+        # Update population
         for i in range(population_size):
             r = np.random.rand()
             
-            # Randomly select another solution
-            j = np.random.randint(population_size)
-            while j == i:
-                j = np.random.randint(population_size)
-            
             # Rao-1 update rule
-            if fitness[i] > fitness[j]:  # If current solution is worse than random solution
-                population[i] = population[i] + r * (best_solution - np.abs(population[i])) + r * (population[j] - np.abs(population[i]))
-            else:  # If current solution is better than random solution
-                population[i] = population[i] + r * (best_solution - np.abs(population[i])) - r * (population[j] - np.abs(population[i]))
+            if r < 0.5:
+                population[i] = population[i] + r * (best_solution - np.abs(population[i]))
+            else:
+                population[i] = population[i] + r * (best_solution - np.mean(population, axis=0))
         
-        # Clip solutions to stay within bounds
+        # Clip to bounds
         population = np.clip(population, bounds[:, 0], bounds[:, 1])
+        
+        # End timing for this iteration
+        if track_history:
+            end_time = time.time()
+            convergence_history['iteration_times'].append(end_time - start_time)
     
-    # Find the best solution in the final population
-    if constraints:
-        final_fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
+    # Return appropriate results based on track_history flag
+    if track_history:
+        return global_best_solution, best_scores, convergence_history
     else:
-        final_fitness = np.apply_along_axis(objective_func, 1, population)
-    
-    best_solution = population[np.argmin(final_fitness)]
-    
-    return best_solution, best_scores
+        return global_best_solution, best_scores
 
 
-def Rao2_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None):
+def Rao2_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     """
     Implementation of the Rao-2 algorithm by R.V. Rao.
     
@@ -183,58 +495,120 @@ def Rao2_algorithm(bounds, num_iterations, population_size, num_variables, objec
     
     Reference: R.V. Rao, "Rao algorithms: Three metaphor-less simple algorithms for solving optimization problems",
     International Journal of Industrial Engineering Computations, 11(2), 2020, 193-212.
+    
+    Parameters:
+    -----------
+    bounds : numpy.ndarray
+        Bounds for each variable, shape (num_variables, 2)
+    num_iterations : int
+        Number of iterations to run the algorithm
+    population_size : int
+        Size of the population
+    num_variables : int
+        Number of variables in the optimization problem
+    objective_func : function
+        Objective function to minimize
+    constraints : list, optional
+        List of constraint functions
+    track_history : bool, optional
+        Whether to track detailed convergence history (default: True)
+        
+    Returns:
+    --------
+    best_solution : numpy.ndarray
+        Best solution found
+    best_scores : list
+        Best score in each iteration (returned if track_history is False)
+    convergence_history : dict
+        Detailed convergence history (returned if track_history is True)
     """
-    # Initialize population randomly within bounds
+    # Initialize population
     population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
     
+    # Initialize history tracking
     best_scores = []
+    if track_history:
+        convergence_history = {
+            'best_scores': [],
+            'best_solutions': [],
+            'worst_scores': [],
+            'mean_scores': [],
+            'population_diversity': [],
+            'iteration_times': []
+        }
+    
+    # Track the global best solution across all iterations
+    global_best_solution = None
+    global_best_score = float('inf')
     
     for iteration in range(num_iterations):
-        # Evaluate fitness with constraints if provided
+        # Start timing this iteration if tracking history
+        if track_history:
+            import time
+            start_time = time.time()
+        
+        # Evaluate fitness
         if constraints:
             fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
         else:
             fitness = np.apply_along_axis(objective_func, 1, population)
         
-        # Identify best and worst solutions
+        # Get best and worst solutions for this iteration
         best_idx = np.argmin(fitness)
         worst_idx = np.argmax(fitness)
-        best_solution = population[best_idx]
-        worst_solution = population[worst_idx]
-        
-        # Record best score
+        best_solution = population[best_idx].copy()
+        worst_solution = population[worst_idx].copy()
         best_score = fitness[best_idx]
+        worst_score = fitness[worst_idx]
+        
+        # Update global best if better
+        if best_score < global_best_score:
+            global_best_solution = best_solution.copy()
+            global_best_score = best_score
+        
+        # Track history
         best_scores.append(best_score)
+        if track_history:
+            convergence_history['best_scores'].append(best_score)
+            convergence_history['best_solutions'].append(best_solution.copy())
+            convergence_history['worst_scores'].append(worst_score)
+            convergence_history['mean_scores'].append(np.mean(fitness))
+            
+            # Calculate population diversity (mean pairwise Euclidean distance)
+            diversity = 0
+            if population_size > 1:
+                for i in range(population_size):
+                    for j in range(i+1, population_size):
+                        diversity += np.linalg.norm(population[i] - population[j])
+                diversity /= (population_size * (population_size - 1) / 2)
+            convergence_history['population_diversity'].append(diversity)
         
-        # Calculate average fitness
-        avg_fitness = np.mean(fitness)
-        
-        # Update each solution
+        # Update population
         for i in range(population_size):
-            r1 = np.random.rand()
-            r2 = np.random.rand()
+            r = np.random.rand()
             
             # Rao-2 update rule
-            if fitness[i] <= avg_fitness:  # If current solution is better than average
-                population[i] = population[i] + r1 * (best_solution - worst_solution)
-            else:  # If current solution is worse than average
-                population[i] = population[i] + r2 * (best_solution - worst_solution)
+            if r < 0.5:
+                population[i] = population[i] + r * (best_solution - np.abs(population[i])) - r * (worst_solution - np.abs(population[i]))
+            else:
+                population[i] = population[i] + r * (best_solution - np.mean(population, axis=0)) - r * (worst_solution - np.abs(population[i]))
         
-        # Clip solutions to stay within bounds
+        # Clip to bounds
         population = np.clip(population, bounds[:, 0], bounds[:, 1])
+        
+        # End timing for this iteration
+        if track_history:
+            end_time = time.time()
+            convergence_history['iteration_times'].append(end_time - start_time)
     
-    # Find the best solution in the final population
-    if constraints:
-        final_fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
+    # Return appropriate results based on track_history flag
+    if track_history:
+        return global_best_solution, best_scores, convergence_history
     else:
-        final_fitness = np.apply_along_axis(objective_func, 1, population)
-    
-    best_solution = population[np.argmin(final_fitness)]
-    
-    return best_solution, best_scores
+        return global_best_solution, best_scores
 
 
-def Rao3_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None):
+def Rao3_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     """
     Implementation of the Rao-3 algorithm by R.V. Rao.
     
@@ -243,52 +617,117 @@ def Rao3_algorithm(bounds, num_iterations, population_size, num_variables, objec
     
     Reference: R.V. Rao, "Rao algorithms: Three metaphor-less simple algorithms for solving optimization problems",
     International Journal of Industrial Engineering Computations, 11(2), 2020, 193-212.
+    
+    Parameters:
+    -----------
+    bounds : numpy.ndarray
+        Bounds for each variable, shape (num_variables, 2)
+    num_iterations : int
+        Number of iterations to run the algorithm
+    population_size : int
+        Size of the population
+    num_variables : int
+        Number of variables in the optimization problem
+    objective_func : function
+        Objective function to minimize
+    constraints : list, optional
+        List of constraint functions
+    track_history : bool, optional
+        Whether to track detailed convergence history (default: True)
+        
+    Returns:
+    --------
+    best_solution : numpy.ndarray
+        Best solution found
+    best_scores : list
+        Best score in each iteration (returned if track_history is False)
+    convergence_history : dict
+        Detailed convergence history (returned if track_history is True)
     """
-    # Initialize population randomly within bounds
+    # Initialize population
     population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
     
+    # Initialize history tracking
     best_scores = []
+    if track_history:
+        convergence_history = {
+            'best_scores': [],
+            'best_solutions': [],
+            'mean_scores': [],
+            'population_diversity': [],
+            'iteration_times': [],
+            'phase_values': []  # Track the phase values
+        }
+    
+    # Track the global best solution across all iterations
+    global_best_solution = None
+    global_best_score = float('inf')
     
     for iteration in range(num_iterations):
-        # Evaluate fitness with constraints if provided
+        # Start timing this iteration if tracking history
+        if track_history:
+            import time
+            start_time = time.time()
+        
+        # Evaluate fitness
         if constraints:
             fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
         else:
             fitness = np.apply_along_axis(objective_func, 1, population)
         
-        # Identify best solution
+        # Get best solution and score for this iteration
         best_idx = np.argmin(fitness)
-        best_solution = population[best_idx]
-        
-        # Record best score
+        best_solution = population[best_idx].copy()
         best_score = fitness[best_idx]
+        
+        # Update global best if better
+        if best_score < global_best_score:
+            global_best_solution = best_solution.copy()
+            global_best_score = best_score
+        
+        # Calculate phase value (varies with iteration)
+        phase = 1 - iteration / num_iterations
+        
+        # Track history
         best_scores.append(best_score)
+        if track_history:
+            convergence_history['best_scores'].append(best_score)
+            convergence_history['best_solutions'].append(best_solution.copy())
+            convergence_history['mean_scores'].append(np.mean(fitness))
+            convergence_history['phase_values'].append(phase)
+            
+            # Calculate population diversity (mean pairwise Euclidean distance)
+            diversity = 0
+            if population_size > 1:
+                for i in range(population_size):
+                    for j in range(i+1, population_size):
+                        diversity += np.linalg.norm(population[i] - population[j])
+                diversity /= (population_size * (population_size - 1) / 2)
+            convergence_history['population_diversity'].append(diversity)
         
-        # Calculate phase (increases with iterations)
-        phase = 1 - (iteration / num_iterations)
-        
-        # Update each solution
+        # Update population
         for i in range(population_size):
             r = np.random.rand()
             
-            # Rao-3 update rule
-            population[i] = population[i] + r * phase * (best_solution - population[i])
+            # Rao-3 update rule with phase factor
+            population[i] = population[i] + r * phase * (best_solution - np.abs(population[i]))
         
-        # Clip solutions to stay within bounds
+        # Clip to bounds
         population = np.clip(population, bounds[:, 0], bounds[:, 1])
+        
+        # End timing for this iteration
+        if track_history:
+            end_time = time.time()
+            convergence_history['iteration_times'].append(end_time - start_time)
     
-    # Find the best solution in the final population
-    if constraints:
-        final_fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
+    # Return appropriate results based on track_history flag
+    if track_history:
+        return global_best_solution, best_scores, convergence_history
     else:
-        final_fitness = np.apply_along_axis(objective_func, 1, population)
-    
-    best_solution = population[np.argmin(final_fitness)]
-    
-    return best_solution, best_scores
+        return global_best_solution, best_scores
 
 
-def TLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None):
+def TLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     """
     Implementation of the Teaching-Learning-Based Optimization (TLBO) algorithm by R.V. Rao.
     
@@ -297,100 +736,6 @@ def TLBO_algorithm(bounds, num_iterations, population_size, num_variables, objec
     
     Reference: R.V. Rao, V.J. Savsani, D.P. Vakharia, "Teaching-Learning-Based Optimization: An optimization method 
     for continuous non-linear large scale problems", Information Sciences, 183(1), 2012, 1-15.
-    """
-    # Initialize population randomly within bounds
-    population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
-    
-    best_scores = []
-    
-    for iteration in range(num_iterations):
-        # Evaluate fitness with constraints if provided
-        if constraints:
-            fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
-        else:
-            fitness = np.apply_along_axis(objective_func, 1, population)
-        
-        # Identify best solution (teacher)
-        best_idx = np.argmin(fitness)
-        teacher = population[best_idx].copy()
-        
-        # Record best score
-        best_score = fitness[best_idx]
-        best_scores.append(best_score)
-        
-        # Calculate mean of the population
-        mean_solution = np.mean(population, axis=0)
-        
-        # Teacher Phase
-        for i in range(population_size):
-            # Teaching factor (either 1 or 2)
-            TF = np.random.randint(1, 3)
-            
-            # Generate new solution based on teacher
-            new_solution = population[i] + np.random.rand(num_variables) * (teacher - TF * mean_solution)
-            
-            # Ensure bounds are respected
-            new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
-            
-            # Evaluate new solution
-            if constraints:
-                new_fitness = constrained_objective_function(new_solution, objective_func, constraints)
-            else:
-                new_fitness = objective_func(new_solution)
-            
-            # Accept if better
-            if new_fitness < fitness[i]:
-                population[i] = new_solution
-                fitness[i] = new_fitness
-        
-        # Learner Phase
-        for i in range(population_size):
-            # Select another learner randomly, different from i
-            j = i
-            while j == i:
-                j = np.random.randint(0, population_size)
-            
-            # Generate new solution based on interaction with another learner
-            if fitness[i] < fitness[j]:  # If current solution is better
-                new_solution = population[i] + np.random.rand(num_variables) * (population[i] - population[j])
-            else:  # If other solution is better
-                new_solution = population[i] + np.random.rand(num_variables) * (population[j] - population[i])
-            
-            # Ensure bounds are respected
-            new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
-            
-            # Evaluate new solution
-            if constraints:
-                new_fitness = constrained_objective_function(new_solution, objective_func, constraints)
-            else:
-                new_fitness = objective_func(new_solution)
-            
-            # Accept if better
-            if new_fitness < fitness[i]:
-                population[i] = new_solution
-                fitness[i] = new_fitness
-    
-    # Find the best solution in the final population
-    if constraints:
-        fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
-    else:
-        fitness = np.apply_along_axis(objective_func, 1, population)
-    
-    best_idx = np.argmin(fitness)
-    best_solution = population[best_idx]
-    
-    # Return the best solution and the history of best scores
-    return best_solution, best_scores
-
-
-def QOJAYA_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None):
-    """
-    Implementation of the Quasi-Oppositional Jaya (QOJAYA) algorithm by R.V. Rao.
-    
-    QOJAYA enhances the standard Jaya algorithm by incorporating quasi-oppositional learning
-    to improve convergence speed and solution quality.
-    
-    Reference: Rao, R.V. (2019). "Jaya: An Advanced Optimization Algorithm and its Engineering Applications."
     
     Parameters:
     -----------
@@ -406,173 +751,82 @@ def QOJAYA_algorithm(bounds, num_iterations, population_size, num_variables, obj
         Objective function to minimize
     constraints : list, optional
         List of constraint functions
+    track_history : bool, optional
+        Whether to track detailed convergence history (default: True)
         
     Returns:
     --------
     best_solution : numpy.ndarray
         Best solution found
     best_scores : list
-        Best score in each iteration
+        Best score in each iteration (returned if track_history is False)
+    convergence_history : dict
+        Detailed convergence history (returned if track_history is True)
     """
     # Initialize population
     population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
     
-    # Initialize best scores list
+    # Initialize history tracking
     best_scores = []
+    if track_history:
+        convergence_history = {
+            'best_scores': [],
+            'best_solutions': [],
+            'mean_scores': [],
+            'population_diversity': [],
+            'iteration_times': [],
+            'teacher_phase_improvements': [],
+            'learner_phase_improvements': []
+        }
     
-    # Function to create quasi-opposite solution
-    def quasi_opposite(solution):
-        a = bounds[:, 0]  # Lower bounds
-        b = bounds[:, 1]  # Upper bounds
-        
-        # Calculate the center of the search space
-        c = (a + b) / 2
-        
-        # Generate quasi-opposite solution
-        quasi_opp = np.zeros_like(solution)
-        for i in range(len(solution)):
-            # Random point between c and the opposite point
-            opposite_point = a[i] + b[i] - solution[i]
-            if solution[i] < c[i]:
-                quasi_opp[i] = np.random.uniform(opposite_point, c[i])
-            else:
-                quasi_opp[i] = np.random.uniform(c[i], opposite_point)
-        
-        return quasi_opp
+    # Track the global best solution across all iterations
+    global_best_solution = None
+    global_best_score = float('inf')
     
-    # Main loop
     for iteration in range(num_iterations):
-        # Evaluate fitness of the population
+        # Start timing this iteration if tracking history
+        if track_history:
+            import time
+            start_time = time.time()
+        
+        # Evaluate fitness
         if constraints:
             fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
         else:
             fitness = np.apply_along_axis(objective_func, 1, population)
         
-        # Find the best and worst solutions
-        best_idx = np.argmin(fitness)
-        worst_idx = np.argmax(fitness)
-        
-        best_solution = population[best_idx]
-        worst_solution = population[worst_idx]
-        
-        # Record the best score
-        best_score = fitness[best_idx]
-        best_scores.append(best_score)
-        
-        # Create new population
-        new_population = np.zeros_like(population)
-        
-        # Apply Jaya algorithm with quasi-oppositional learning
-        for i in range(population_size):
-            # Standard Jaya update
-            r1 = np.random.rand(num_variables)
-            r2 = np.random.rand(num_variables)
-            
-            # Move toward best and away from worst
-            new_solution = population[i] + r1 * (best_solution - abs(population[i])) - r2 * (worst_solution - abs(population[i]))
-            
-            # Ensure bounds are respected
-            new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
-            
-            # Generate quasi-opposite solution
-            quasi_opp_solution = quasi_opposite(new_solution)
-            quasi_opp_solution = np.clip(quasi_opp_solution, bounds[:, 0], bounds[:, 1])
-            
-            # Evaluate both solutions
-            if constraints:
-                new_fitness = constrained_objective_function(new_solution, objective_func, constraints)
-                quasi_opp_fitness = constrained_objective_function(quasi_opp_solution, objective_func, constraints)
-            else:
-                new_fitness = objective_func(new_solution)
-                quasi_opp_fitness = objective_func(quasi_opp_solution)
-            
-            # Select the better solution between original, new, and quasi-opposite
-            if quasi_opp_fitness < new_fitness and quasi_opp_fitness < fitness[i]:
-                new_population[i] = quasi_opp_solution
-            elif new_fitness < fitness[i]:
-                new_population[i] = new_solution
-            else:
-                new_population[i] = population[i]
-        
-        # Update population
-        population = new_population.copy()
-    
-    # Find the best solution in the final population
-    if constraints:
-        fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
-    else:
-        fitness = np.apply_along_axis(objective_func, 1, population)
-    
-    best_idx = np.argmin(fitness)
-    best_solution = population[best_idx]
-    
-    # Return the best solution and the history of best scores
-    return best_solution, best_scores
-
-
-def TLBO_with_Elitism_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None):
-    """
-    Implementation of the Teaching-Learning-Based Optimization (TLBO) with Elitism by R.V. Rao.
-    
-    This version of TLBO incorporates elitism to preserve the best solutions across generations,
-    improving convergence and solution quality.
-    
-    Reference: Rao, R.V., Patel, V. (2013). "Improved teaching-learning-based optimization algorithm 
-    for solving unconstrained optimization problems."
-    
-    Parameters:
-    -----------
-    bounds : numpy.ndarray
-        Bounds for each variable, shape (num_variables, 2)
-    num_iterations : int
-        Number of iterations to run the algorithm
-    population_size : int
-        Size of the population
-    num_variables : int
-        Number of variables in the optimization problem
-    objective_func : function
-        Objective function to minimize
-    constraints : list, optional
-        List of constraint functions
-        
-    Returns:
-    --------
-    best_solution : numpy.ndarray
-        Best solution found
-    best_scores : list
-        Best score in each iteration
-    """
-    # Initialize population
-    population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
-    
-    # Initialize best scores list
-    best_scores = []
-    
-    # Elite size (typically a small percentage of the population)
-    elite_size = max(1, int(0.1 * population_size))
-    
-    for iteration in range(num_iterations):
-        # Evaluate fitness of the population
-        if constraints:
-            fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
-        else:
-            fitness = np.apply_along_axis(objective_func, 1, population)
-        
-        # Store elite solutions
-        elite_indices = np.argsort(fitness)[:elite_size]
-        elite_solutions = population[elite_indices].copy()
-        elite_fitness = np.array(fitness)[elite_indices].copy()
-        
-        # Find the best solution (teacher)
+        # Get best solution (teacher) and score for this iteration
         best_idx = np.argmin(fitness)
         best_solution = population[best_idx]
-        
-        # Record the best score
         best_score = fitness[best_idx]
-        best_scores.append(best_score)
+        
+        # Update global best if better
+        if best_score < global_best_score:
+            global_best_solution = best_solution.copy()
+            global_best_score = best_score
         
         # Calculate mean of the population
         mean_solution = np.mean(population, axis=0)
+        
+        # Track history
+        best_scores.append(best_score)
+        if track_history:
+            convergence_history['best_scores'].append(best_score)
+            convergence_history['best_solutions'].append(best_solution.copy())
+            convergence_history['mean_scores'].append(np.mean(fitness))
+            
+            # Calculate population diversity (mean pairwise Euclidean distance)
+            diversity = 0
+            if population_size > 1:
+                for i in range(population_size):
+                    for j in range(i+1, population_size):
+                        diversity += np.linalg.norm(population[i] - population[j])
+                diversity /= (population_size * (population_size - 1) / 2)
+            convergence_history['population_diversity'].append(diversity)
+            
+            # Initialize improvement counters for this iteration
+            teacher_improvements = 0
+            learner_improvements = 0
         
         # Teacher Phase
         new_population = np.zeros_like(population)
@@ -596,6 +850,8 @@ def TLBO_with_Elitism_algorithm(bounds, num_iterations, population_size, num_var
             if new_fitness < fitness[i]:
                 new_population[i] = new_solution
                 fitness[i] = new_fitness
+                if track_history:
+                    teacher_improvements += 1
             else:
                 new_population[i] = population[i]
         
@@ -605,7 +861,7 @@ def TLBO_with_Elitism_algorithm(bounds, num_iterations, population_size, num_var
         # Learner Phase
         new_population = np.zeros_like(population)
         for i in range(population_size):
-            # Select another solution randomly, different from i
+            # Select another learner randomly, different from i
             j = i
             while j == i:
                 j = np.random.randint(0, population_size)
@@ -629,6 +885,358 @@ def TLBO_with_Elitism_algorithm(bounds, num_iterations, population_size, num_var
             if new_fitness < fitness[i]:
                 new_population[i] = new_solution
                 fitness[i] = new_fitness
+                if track_history:
+                    learner_improvements += 1
+            else:
+                new_population[i] = population[i]
+        
+        # Update population after Learner Phase
+        population = new_population.copy()
+        
+        # Track phase improvements
+        if track_history:
+            convergence_history['teacher_phase_improvements'].append(teacher_improvements)
+            convergence_history['learner_phase_improvements'].append(learner_improvements)
+        
+        # End timing for this iteration
+        if track_history:
+            end_time = time.time()
+            convergence_history['iteration_times'].append(end_time - start_time)
+    
+    # Return appropriate results based on track_history flag
+    if track_history:
+        return global_best_solution, best_scores, convergence_history
+    else:
+        return global_best_solution, best_scores
+
+
+def QOJAYA_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
+    """
+    Implementation of the Quasi-Oppositional Jaya (QOJAYA) algorithm by R.V. Rao.
+    
+    QOJAYA enhances the standard Jaya algorithm by incorporating quasi-oppositional learning
+    to improve convergence speed and solution quality.
+    
+    Reference: Rao, R.V. (2019). "Jaya: An Advanced Optimization Algorithm and its Engineering Applications."
+    
+    Parameters:
+    -----------
+    bounds : numpy.ndarray
+        Bounds for each variable, shape (num_variables, 2)
+    num_iterations : int
+        Number of iterations to run the algorithm
+    population_size : int
+        Size of the population
+    num_variables : int
+        Number of variables in the optimization problem
+    objective_func : function
+        Objective function to minimize
+    constraints : list, optional
+        List of constraint functions
+    track_history : bool, optional
+        Whether to track detailed convergence history (default: True)
+        
+    Returns:
+    --------
+    best_solution : numpy.ndarray
+        Best solution found
+    best_scores : list
+        Best score in each iteration (returned if track_history is False)
+    convergence_history : dict
+        Detailed convergence history (returned if track_history is True)
+    """
+    # Initialize population
+    population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
+    
+    # Initialize history tracking
+    best_scores = []
+    if track_history:
+        convergence_history = {
+            'best_scores': [],
+            'best_solutions': [],
+            'worst_scores': [],
+            'mean_scores': [],
+            'population_diversity': [],
+            'iteration_times': [],
+            'opposition_improvements': []  # Track improvements from opposition
+        }
+    
+    # Track the global best solution across all iterations
+    global_best_solution = None
+    global_best_score = float('inf')
+    
+    # Function to generate quasi-opposite point
+    def quasi_opposite_point(x, a, b):
+        return a + b - np.random.rand() * x
+    
+    for iteration in range(num_iterations):
+        # Start timing this iteration if tracking history
+        if track_history:
+            import time
+            start_time = time.time()
+            opposition_improvements = 0
+        
+        # Evaluate fitness
+        if constraints:
+            fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
+        else:
+            fitness = np.apply_along_axis(objective_func, 1, population)
+        
+        # Get best and worst solutions for this iteration
+        best_idx = np.argmin(fitness)
+        worst_idx = np.argmax(fitness)
+        best_solution = population[best_idx].copy()
+        worst_solution = population[worst_idx].copy()
+        best_score = fitness[best_idx]
+        worst_score = fitness[worst_idx]
+        
+        # Update global best if better
+        if best_score < global_best_score:
+            global_best_solution = best_solution.copy()
+            global_best_score = best_score
+        
+        # Track history
+        best_scores.append(best_score)
+        if track_history:
+            convergence_history['best_scores'].append(best_score)
+            convergence_history['best_solutions'].append(best_solution.copy())
+            convergence_history['worst_scores'].append(worst_score)
+            convergence_history['mean_scores'].append(np.mean(fitness))
+            
+            # Calculate population diversity (mean pairwise Euclidean distance)
+            diversity = 0
+            if population_size > 1:
+                for i in range(population_size):
+                    for j in range(i+1, population_size):
+                        diversity += np.linalg.norm(population[i] - population[j])
+                diversity /= (population_size * (population_size - 1) / 2)
+            convergence_history['population_diversity'].append(diversity)
+        
+        # Update population
+        new_population = np.zeros_like(population)
+        for i in range(population_size):
+            r1 = np.random.rand(num_variables)
+            r2 = np.random.rand(num_variables)
+            
+            # Jaya update rule
+            new_solution = population[i] + r1 * (best_solution - np.abs(population[i])) - r2 * (worst_solution - np.abs(population[i]))
+            
+            # Ensure bounds are respected
+            new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
+            
+            # Generate quasi-opposite solution
+            qo_solution = np.array([quasi_opposite_point(new_solution[j], bounds[j, 0], bounds[j, 1]) for j in range(num_variables)])
+            qo_solution = np.clip(qo_solution, bounds[:, 0], bounds[:, 1])
+            
+            # Evaluate both solutions
+            if constraints:
+                new_fitness = constrained_objective_function(new_solution, objective_func, constraints)
+                qo_fitness = constrained_objective_function(qo_solution, objective_func, constraints)
+            else:
+                new_fitness = objective_func(new_solution)
+                qo_fitness = objective_func(qo_solution)
+            
+            # Select the better solution
+            if qo_fitness < new_fitness and qo_fitness < fitness[i]:
+                new_population[i] = qo_solution
+                fitness[i] = qo_fitness
+                if track_history:
+                    opposition_improvements += 1
+            elif new_fitness < fitness[i]:
+                new_population[i] = new_solution
+                fitness[i] = new_fitness
+            else:
+                new_population[i] = population[i]
+        
+        # Update population
+        population = new_population.copy()
+        
+        # Track opposition improvements
+        if track_history:
+            convergence_history['opposition_improvements'].append(opposition_improvements)
+        
+        # End timing for this iteration
+        if track_history:
+            end_time = time.time()
+            convergence_history['iteration_times'].append(end_time - start_time)
+    
+    # Return appropriate results based on track_history flag
+    if track_history:
+        return global_best_solution, best_scores, convergence_history
+    else:
+        return global_best_solution, best_scores
+
+
+def TLBO_with_Elitism_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
+    """
+    Implementation of the Teaching-Learning-Based Optimization (TLBO) with Elitism by R.V. Rao.
+    
+    This version of TLBO incorporates elitism to preserve the best solutions across generations,
+    improving convergence and solution quality.
+    
+    Reference: Rao, R.V., Patel, V. (2013). "Improved teaching-learning-based optimization algorithm 
+    for solving unconstrained optimization problems."
+    
+    Parameters:
+    -----------
+    bounds : numpy.ndarray
+        Bounds for each variable, shape (num_variables, 2)
+    num_iterations : int
+        Number of iterations to run the algorithm
+    population_size : int
+        Size of the population
+    num_variables : int
+        Number of variables in the optimization problem
+    objective_func : function
+        Objective function to minimize
+    constraints : list, optional
+        List of constraint functions
+    track_history : bool, optional
+        Whether to track detailed convergence history (default: True)
+        
+    Returns:
+    --------
+    best_solution : numpy.ndarray
+        Best solution found
+    best_scores : list
+        Best score in each iteration (returned if track_history is False)
+    convergence_history : dict
+        Detailed convergence history (returned if track_history is True)
+    """
+    # Initialize population
+    population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
+    
+    # Initialize history tracking
+    best_scores = []
+    if track_history:
+        convergence_history = {
+            'best_scores': [],
+            'best_solutions': [],
+            'mean_scores': [],
+            'population_diversity': [],
+            'iteration_times': [],
+            'elite_scores': [],  # Track elite population scores
+            'teacher_phase_improvements': [],  # Track improvements in teacher phase
+            'learner_phase_improvements': []  # Track improvements in learner phase
+        }
+    
+    # Track the global best solution across all iterations
+    global_best_solution = None
+    global_best_score = float('inf')
+    
+    # Elite size (typically a small percentage of the population)
+    elite_size = max(1, int(0.1 * population_size))
+    
+    for iteration in range(num_iterations):
+        # Start timing this iteration if tracking history
+        if track_history:
+            import time
+            start_time = time.time()
+            teacher_phase_improvements = 0
+            learner_phase_improvements = 0
+        
+        # Evaluate fitness of the population
+        if constraints:
+            fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
+        else:
+            fitness = np.apply_along_axis(objective_func, 1, population)
+        
+        # Store elite solutions
+        elite_indices = np.argsort(fitness)[:elite_size]
+        elite_solutions = population[elite_indices].copy()
+        elite_fitness = np.array(fitness)[elite_indices].copy()
+        
+        # Find the best solution (teacher)
+        best_idx = np.argmin(fitness)
+        best_solution = population[best_idx]
+        
+        # Record the best score
+        best_score = fitness[best_idx]
+        best_scores.append(best_score)
+        
+        # Calculate mean of the population
+        mean_solution = np.mean(population, axis=0)
+        
+        # Track history
+        if track_history:
+            convergence_history['best_scores'].append(best_score)
+            convergence_history['best_solutions'].append(best_solution.copy())
+            convergence_history['mean_scores'].append(np.mean(fitness))
+            convergence_history['elite_scores'].append(np.mean(elite_fitness))
+            
+            # Calculate population diversity (mean pairwise Euclidean distance)
+            diversity = 0
+            if population_size > 1:
+                for i in range(population_size):
+                    for j in range(i+1, population_size):
+                        diversity += np.linalg.norm(population[i] - population[j])
+                diversity /= (population_size * (population_size - 1) / 2)
+            convergence_history['population_diversity'].append(diversity)
+            
+            # End timing for this iteration
+            end_time = time.time()
+            convergence_history['iteration_times'].append(end_time - start_time)
+        
+        # Teacher Phase
+        new_population = np.zeros_like(population)
+        for i in range(population_size):
+            # Teaching factor (either 1 or 2)
+            TF = np.random.randint(1, 3)
+            
+            # Generate new solution based on teacher
+            r = np.random.rand(num_variables)
+            new_solution = population[i] + r * (best_solution - TF * mean_solution)
+            
+            # Ensure bounds are respected
+            new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
+            
+            # Evaluate new solution
+            if constraints:
+                new_fitness = constrained_objective_function(new_solution, objective_func, constraints)
+            else:
+                new_fitness = objective_func(new_solution)
+            
+            # Accept if better
+            if new_fitness < fitness[i]:
+                new_population[i] = new_solution
+                fitness[i] = new_fitness
+                if track_history:
+                    teacher_phase_improvements += 1
+            else:
+                new_population[i] = population[i]
+        
+        # Update population after Teacher Phase
+        population = new_population.copy()
+        
+        # Learner Phase
+        new_population = np.zeros_like(population)
+        for i in range(population_size):
+            # Select another learner randomly, different from i
+            j = i
+            while j == i:
+                j = np.random.randint(0, population_size)
+            
+            # Generate new solution based on interaction with another learner
+            if fitness[i] < fitness[j]:  # If current solution is better
+                new_solution = population[i] + np.random.rand(num_variables) * (population[i] - population[j])
+            else:  # If other solution is better
+                new_solution = population[i] + np.random.rand(num_variables) * (population[j] - population[i])
+            
+            # Ensure bounds are respected
+            new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
+            
+            # Evaluate new solution
+            if constraints:
+                new_fitness = constrained_objective_function(new_solution, objective_func, constraints)
+            else:
+                new_fitness = objective_func(new_solution)
+            
+            # Accept if better
+            if new_fitness < fitness[i]:
+                new_population[i] = new_solution
+                fitness[i] = new_fitness
+                if track_history:
+                    learner_phase_improvements += 1
             else:
                 new_population[i] = population[i]
         
@@ -636,24 +1244,28 @@ def TLBO_with_Elitism_algorithm(bounds, num_iterations, population_size, num_var
         population = new_population.copy()
         
         # Apply elitism: replace worst solutions with elite solutions
-        worst_indices = np.argsort(fitness)[-elite_size:]
+        if constraints:
+            fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
+        else:
+            fitness = np.apply_along_axis(objective_func, 1, population)
+            
+        worst_indices = np.argsort(fitness)[-int(0.1*population_size):]
         for i, idx in enumerate(worst_indices):
             population[idx] = elite_solutions[i]
+        
+        # Track phase improvements
+        if track_history:
+            convergence_history['teacher_phase_improvements'].append(teacher_phase_improvements)
+            convergence_history['learner_phase_improvements'].append(learner_phase_improvements)
     
-    # Find the best solution in the final population
-    if constraints:
-        fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
+    # Return appropriate results based on track_history flag
+    if track_history:
+        return global_best_solution, best_scores, convergence_history
     else:
-        fitness = np.apply_along_axis(objective_func, 1, population)
-    
-    best_idx = np.argmin(fitness)
-    best_solution = population[best_idx]
-    
-    # Return the best solution and the history of best scores
-    return best_solution, best_scores
+        return global_best_solution, best_scores
 
 
-def JCRO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None):
+def JCRO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     """
     Implementation of the Jaya-based Chemical Reaction Optimization (JCRO) algorithm by R.V. Rao.
     
@@ -677,59 +1289,166 @@ def JCRO_algorithm(bounds, num_iterations, population_size, num_variables, objec
         Objective function to minimize
     constraints : list, optional
         List of constraint functions
+    track_history : bool, optional
+        Whether to track detailed convergence history (default: True)
         
     Returns:
     --------
     best_solution : numpy.ndarray
         Best solution found
     best_scores : list
-        Best score in each iteration
+        Best score in each iteration (returned if track_history is False)
+    convergence_history : dict
+        Detailed convergence history (returned if track_history is True)
     """
     # Initialize population (molecules)
     population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
     
-    # Initialize kinetic energy for each molecule
-    kinetic_energy = np.ones(population_size) * 100  # Initial KE value
-    
-    # Initialize best scores list
+    # Initialize history tracking
     best_scores = []
+    if track_history:
+        convergence_history = {
+            'best_scores': [],
+            'best_solutions': [],
+            'worst_scores': [],
+            'mean_scores': [],
+            'population_diversity': [],
+            'iteration_times': [],
+            'synthesis_improvements': [],
+            'decomposition_improvements': [],
+            'intermolecular_improvements': []
+        }
+    
+    # Track the global best solution across all iterations
+    global_best_solution = None
+    global_best_score = float('inf')
     
     # CRO parameters
-    alpha = 0.1  # Decomposition parameter
-    beta = 0.3   # Synthesis parameter
-    buffer = 0   # Energy buffer
+    ke_loss_rate = 0.2
+    molecular_collision_rate = 0.2
+    
+    # Initialize kinetic energy for each molecule
+    kinetic_energy = np.ones(population_size) * 1000
     
     for iteration in range(num_iterations):
-        # Evaluate fitness of the population
+        # Start timing this iteration if tracking history
+        if track_history:
+            import time
+            start_time = time.time()
+            synthesis_improvements = 0
+            decomposition_improvements = 0
+            intermolecular_improvements = 0
+        
+        # Evaluate fitness
         if constraints:
             fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
         else:
             fitness = np.apply_along_axis(objective_func, 1, population)
         
-        # Find the best and worst solutions
+        # Get best and worst solutions for this iteration
         best_idx = np.argmin(fitness)
         worst_idx = np.argmax(fitness)
-        best_solution = population[best_idx]
-        worst_solution = population[worst_idx]
-        
-        # Record the best score
+        best_solution = population[best_idx].copy()
+        worst_solution = population[worst_idx].copy()
         best_score = fitness[best_idx]
+        worst_score = fitness[worst_idx]
+        
+        # Update global best if better
+        if best_score < global_best_score:
+            global_best_solution = best_solution.copy()
+            global_best_score = best_score
+        
+        # Track history
         best_scores.append(best_score)
-        
-        # New population after reactions
-        new_population = np.zeros_like(population)
-        new_kinetic_energy = np.zeros_like(kinetic_energy)
-        
-        # Process each molecule
-        i = 0
-        while i < population_size:
-            # Randomly select reaction type
-            reaction_type = np.random.rand()
+        if track_history:
+            convergence_history['best_scores'].append(best_score)
+            convergence_history['best_solutions'].append(best_solution.copy())
+            convergence_history['worst_scores'].append(worst_score)
+            convergence_history['mean_scores'].append(np.mean(fitness))
             
-            if reaction_type < 0.25:  # On-wall ineffective collision (Jaya-based)
-                # Apply Jaya update
+            # Calculate population diversity (mean pairwise Euclidean distance)
+            diversity = 0
+            if population_size > 1:
+                for i in range(population_size):
+                    for j in range(i+1, population_size):
+                        diversity += np.linalg.norm(population[i] - population[j])
+                diversity /= (population_size * (population_size - 1) / 2)
+            convergence_history['population_diversity'].append(diversity)
+        
+        # Update population using CRO operators
+        for i in range(population_size):
+            # Decide which operator to use
+            if np.random.rand() < molecular_collision_rate:
+                # Intermolecular collision (synthesis or decomposition)
+                if np.random.rand() < 0.5:
+                    # Synthesis: combine two molecules
+                    j = np.random.randint(population_size)
+                    while j == i:
+                        j = np.random.randint(population_size)
+                    
+                    # Create new solution using synthesis
+                    r = np.random.rand(num_variables)
+                    new_solution = r * population[i] + (1 - r) * population[j]
+                    
+                    # Apply Jaya-inspired modification
+                    new_solution += np.random.rand(num_variables) * (best_solution - np.abs(new_solution)) - np.random.rand(num_variables) * (worst_solution - np.abs(new_solution))
+                    
+                    # Ensure bounds are respected
+                    new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
+                    
+                    # Evaluate new solution
+                    if constraints:
+                        new_fitness = constrained_objective_function(new_solution, objective_func, constraints)
+                    else:
+                        new_fitness = objective_func(new_solution)
+                    
+                    # Accept if better
+                    if new_fitness < fitness[i]:
+                        population[i] = new_solution
+                        fitness[i] = new_fitness
+                        kinetic_energy[i] = kinetic_energy[i] * (1 - ke_loss_rate)
+                        if track_history:
+                            synthesis_improvements += 1
+                else:
+                    # Decomposition: split one molecule into two
+                    # Create two new solutions
+                    r1 = np.random.rand(num_variables)
+                    r2 = np.random.rand(num_variables)
+                    
+                    new_solution1 = population[i] + r1 * (best_solution - np.abs(population[i]))
+                    new_solution2 = population[i] - r2 * (worst_solution - np.abs(population[i]))
+                    
+                    # Ensure bounds are respected
+                    new_solution1 = np.clip(new_solution1, bounds[:, 0], bounds[:, 1])
+                    new_solution2 = np.clip(new_solution2, bounds[:, 0], bounds[:, 1])
+                    
+                    # Evaluate new solutions
+                    if constraints:
+                        new_fitness1 = constrained_objective_function(new_solution1, objective_func, constraints)
+                        new_fitness2 = constrained_objective_function(new_solution2, objective_func, constraints)
+                    else:
+                        new_fitness1 = objective_func(new_solution1)
+                        new_fitness2 = objective_func(new_solution2)
+                    
+                    # Replace current solution with the better of the two new solutions
+                    if new_fitness1 < new_fitness2 and new_fitness1 < fitness[i]:
+                        population[i] = new_solution1
+                        fitness[i] = new_fitness1
+                        kinetic_energy[i] = kinetic_energy[i] * (1 - ke_loss_rate)
+                        if track_history:
+                            decomposition_improvements += 1
+                    elif new_fitness2 < fitness[i]:
+                        population[i] = new_solution2
+                        fitness[i] = new_fitness2
+                        kinetic_energy[i] = kinetic_energy[i] * (1 - ke_loss_rate)
+                        if track_history:
+                            decomposition_improvements += 1
+            else:
+                # Intramolecular collision (Jaya update)
                 r1 = np.random.rand(num_variables)
                 r2 = np.random.rand(num_variables)
+                
+                # Standard Jaya update
                 new_solution = population[i] + r1 * (best_solution - np.abs(population[i])) - r2 * (worst_solution - np.abs(population[i]))
                 
                 # Ensure bounds are respected
@@ -741,172 +1460,40 @@ def JCRO_algorithm(bounds, num_iterations, population_size, num_variables, objec
                 else:
                     new_fitness = objective_func(new_solution)
                 
-                # Energy change
-                delta_PE = fitness[i] - new_fitness
-                
-                if delta_PE >= 0:  # Accept if better
-                    new_population[i] = new_solution
-                    new_kinetic_energy[i] = kinetic_energy[i]
-                    buffer += delta_PE * 0.1  # Add some energy to buffer
-                else:  # Accept with probability based on KE
-                    if -delta_PE <= kinetic_energy[i]:
-                        new_population[i] = new_solution
-                        new_kinetic_energy[i] = kinetic_energy[i] + delta_PE
-                    else:
-                        new_population[i] = population[i]
-                        new_kinetic_energy[i] = kinetic_energy[i]
-                
-                i += 1
-                
-            elif reaction_type < 0.5:  # Decomposition
-                if i < population_size - 1 and kinetic_energy[i] > alpha:
-                    # Create two new solutions
-                    r1 = np.random.rand(num_variables)
-                    r2 = np.random.rand(num_variables)
-                    new_solution1 = population[i] + r1 * np.random.normal(0, 1, num_variables)
-                    new_solution2 = population[i] + r2 * np.random.normal(0, 1, num_variables)
-                    
-                    # Ensure bounds are respected
-                    new_solution1 = np.clip(new_solution1, bounds[:, 0], bounds[:, 1])
-                    new_solution2 = np.clip(new_solution2, bounds[:, 0], bounds[:, 1])
-                    
-                    # Evaluate new solutions
-                    if constraints:
-                        new_fitness1 = constrained_objective_function(new_solution1, objective_func, constraints)
-                        new_fitness2 = constrained_objective_function(new_solution2, objective_func, constraints)
-                    else:
-                        new_fitness1 = objective_func(new_solution1)
-                        new_fitness2 = objective_func(new_solution2)
-                    
-                    # Energy change
-                    delta_PE = fitness[i] - min(new_fitness1, new_fitness2)
-                    
-                    if delta_PE + kinetic_energy[i] + buffer >= 0:
-                        new_population[i] = new_solution1
-                        new_population[i+1] = new_solution2
-                        energy_split = kinetic_energy[i] * np.random.rand()
-                        new_kinetic_energy[i] = energy_split
-                        new_kinetic_energy[i+1] = kinetic_energy[i] - energy_split + delta_PE + buffer
-                        buffer = 0
-                    else:
-                        new_population[i] = population[i]
-                        new_kinetic_energy[i] = kinetic_energy[i]
-                        i -= 1  # Try another reaction
-                    
-                    i += 2
-                else:
-                    # Not enough energy, try another reaction
-                    i -= 1
-                    i += 1
-                    
-            elif reaction_type < 0.75:  # Inter-molecular ineffective collision
-                if i < population_size - 1:
-                    # Create two new solutions by exchanging information
-                    r = np.random.rand(num_variables)
-                    mask = r > 0.5
-                    new_solution1 = np.copy(population[i])
-                    new_solution2 = np.copy(population[i+1])
-                    new_solution1[mask] = population[i+1][mask]
-                    new_solution2[mask] = population[i][mask]
-                    
-                    # Ensure bounds are respected
-                    new_solution1 = np.clip(new_solution1, bounds[:, 0], bounds[:, 1])
-                    new_solution2 = np.clip(new_solution2, bounds[:, 0], bounds[:, 1])
-                    
-                    # Evaluate new solutions
-                    if constraints:
-                        new_fitness1 = constrained_objective_function(new_solution1, objective_func, constraints)
-                        new_fitness2 = constrained_objective_function(new_solution2, objective_func, constraints)
-                    else:
-                        new_fitness1 = objective_func(new_solution1)
-                        new_fitness2 = objective_func(new_solution2)
-                    
-                    # Energy changes
-                    delta_PE1 = fitness[i] - new_fitness1
-                    delta_PE2 = fitness[i+1] - new_fitness2
-                    
-                    # Accept if energy allows
-                    if delta_PE1 + delta_PE2 >= 0:
-                        new_population[i] = new_solution1
-                        new_population[i+1] = new_solution2
-                        new_kinetic_energy[i] = kinetic_energy[i] + delta_PE1 * 0.5
-                        new_kinetic_energy[i+1] = kinetic_energy[i+1] + delta_PE2 * 0.5
-                    else:
-                        new_population[i] = population[i]
-                        new_population[i+1] = population[i+1]
-                        new_kinetic_energy[i] = kinetic_energy[i]
-                        new_kinetic_energy[i+1] = kinetic_energy[i+1]
-                    
-                    i += 2
-                else:
-                    # Not enough molecules, try another reaction
-                    i -= 1
-                    i += 1
-                    
-            else:  # Synthesis
-                if i < population_size - 1 and kinetic_energy[i] + kinetic_energy[i+1] > beta:
-                    # Create one new solution by combining two
-                    new_solution = (population[i] + population[i+1]) / 2
-                    
-                    # Add some randomness
-                    new_solution += np.random.normal(0, 0.1, num_variables)
-                    
-                    # Ensure bounds are respected
-                    new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
-                    
-                    # Evaluate new solution
-                    if constraints:
-                        new_fitness = constrained_objective_function(new_solution, objective_func, constraints)
-                    else:
-                        new_fitness = objective_func(new_solution)
-                    
-                    # Energy change
-                    delta_PE = fitness[i] + fitness[i+1] - new_fitness
-                    
-                    # Accept if better
-                    if delta_PE >= 0:
-                        new_population[i] = new_solution
-                        new_kinetic_energy[i] = kinetic_energy[i] + kinetic_energy[i+1] + delta_PE
-                        
-                        # Fill the gap with a random solution
-                        new_population[i+1] = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=num_variables)
-                        new_kinetic_energy[i+1] = 100  # Reset KE
-                    else:
-                        new_population[i] = population[i]
-                        new_population[i+1] = population[i+1]
-                        new_kinetic_energy[i] = kinetic_energy[i]
-                        new_kinetic_energy[i+1] = kinetic_energy[i+1]
-                    
-                    i += 2
-                else:
-                    # Not enough energy, try another reaction
-                    i -= 1
-                    i += 1
+                # Accept if better
+                if new_fitness < fitness[i]:
+                    population[i] = new_solution
+                    fitness[i] = new_fitness
+                    kinetic_energy[i] = kinetic_energy[i] * (1 - ke_loss_rate)
+                    if track_history:
+                        intermolecular_improvements += 1
         
-        # Update population and kinetic energy
-        population = new_population.copy()
-        kinetic_energy = new_kinetic_energy.copy()
+        # Track CRO improvements
+        if track_history:
+            convergence_history['synthesis_improvements'].append(synthesis_improvements)
+            convergence_history['decomposition_improvements'].append(decomposition_improvements)
+            convergence_history['intermolecular_improvements'].append(intermolecular_improvements)
+        
+        # End timing for this iteration
+        if track_history:
+            end_time = time.time()
+            convergence_history['iteration_times'].append(end_time - start_time)
     
-    # Find the best solution in the final population
-    if constraints:
-        fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
+    # Return appropriate results based on track_history flag
+    if track_history:
+        return global_best_solution, best_scores, convergence_history
     else:
-        fitness = np.apply_along_axis(objective_func, 1, population)
-    
-    best_idx = np.argmin(fitness)
-    best_solution = population[best_idx]
-    
-    # Return the best solution and the history of best scores
-    return best_solution, best_scores
+        return global_best_solution, best_scores
 
 
-def GOTLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None):
+def GOTLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     """
-    Implementation of the Generalized Oppositional Teaching-Learning-Based Optimization (GOTLBO) algorithm by R.V. Rao.
+    Implementation of the Generalized Oppositional Teaching-Learning-Based Optimization (GOTLBO) algorithm.
     
-    GOTLBO incorporates oppositional-based learning into TLBO for faster convergence and better exploration.
+    GOTLBO enhances the standard TLBO algorithm by incorporating oppositional learning
+    and generalized learning phases for improved exploration and exploitation.
     
-    Reference: Rao, R.V., Patel, V. (2014). "An improved teaching-learning-based optimization algorithm 
+    Reference: Rao, R.V., Patel, V. (2013). "An improved teaching-learning-based optimization algorithm
     for solving unconstrained optimization problems."
     
     Parameters:
@@ -923,77 +1510,93 @@ def GOTLBO_algorithm(bounds, num_iterations, population_size, num_variables, obj
         Objective function to minimize
     constraints : list, optional
         List of constraint functions
+    track_history : bool, optional
+        Whether to track detailed convergence history (default: True)
         
     Returns:
     --------
     best_solution : numpy.ndarray
         Best solution found
     best_scores : list
-        Best score in each iteration
+        Best score in each iteration (returned if track_history is False)
+    convergence_history : dict
+        Detailed convergence history (returned if track_history is True)
     """
     # Initialize population
     population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
     
-    # Initialize best scores list
+    # Initialize history tracking
     best_scores = []
+    if track_history:
+        convergence_history = {
+            'best_scores': [],
+            'best_solutions': [],
+            'worst_scores': [],
+            'mean_scores': [],
+            'population_diversity': [],
+            'iteration_times': [],
+            'teacher_phase_improvements': [],
+            'learner_phase_improvements': [],
+            'opposition_phase_improvements': []
+        }
     
-    # Oppositional learning probability
-    p_obl = 0.3
+    # Track the global best solution across all iterations
+    global_best_solution = None
+    global_best_score = float('inf')
     
-    # Calculate opposite point
-    def opposite_point(x, a, b):
-        return a + b - x
-    
-    # Calculate generalized opposite point
-    def generalized_opposite_point(x, a, b, k=0.5):
-        return np.random.uniform(a, b) * k + (a + b - x) * (1 - k)
+    # Function to generate opposite solution
+    def opposite_solution(solution, bounds):
+        return bounds[:, 0] + bounds[:, 1] - solution
     
     for iteration in range(num_iterations):
-        # Apply oppositional learning with probability p_obl
-        if np.random.rand() < p_obl:
-            # Create oppositional population
-            opp_population = np.zeros_like(population)
-            for i in range(population_size):
-                for j in range(num_variables):
-                    if np.random.rand() < 0.5:  # Use simple opposition
-                        opp_population[i, j] = opposite_point(population[i, j], bounds[j, 0], bounds[j, 1])
-                    else:  # Use generalized opposition
-                        opp_population[i, j] = generalized_opposite_point(population[i, j], bounds[j, 0], bounds[j, 1])
-            
-            # Evaluate fitness of oppositional population
-            if constraints:
-                opp_fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in opp_population]
-            else:
-                opp_fitness = np.apply_along_axis(objective_func, 1, opp_population)
-            
-            # Combine populations and select the best individuals
-            combined_population = np.vstack((population, opp_population))
-            combined_fitness = np.concatenate((fitness, opp_fitness))
-            
-            # Select the best population_size individuals
-            best_indices = np.argsort(combined_fitness)[:population_size]
-            population = combined_population[best_indices]
-            fitness = combined_fitness[best_indices]
+        # Start timing this iteration if tracking history
+        if track_history:
+            import time
+            start_time = time.time()
+            teacher_phase_improvements = 0
+            learner_phase_improvements = 0
+            opposition_phase_improvements = 0
+        
+        # Evaluate fitness
+        if constraints:
+            fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
         else:
-            # Evaluate fitness of the population
-            if constraints:
-                fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
-            else:
-                fitness = np.apply_along_axis(objective_func, 1, population)
+            fitness = np.apply_along_axis(objective_func, 1, population)
         
-        # Find the best solution (teacher)
+        # Get best and worst solutions for this iteration
         best_idx = np.argmin(fitness)
-        best_solution = population[best_idx]
-        
-        # Record the best score
+        worst_idx = np.argmax(fitness)
+        best_solution = population[best_idx].copy()
+        worst_solution = population[worst_idx].copy()
         best_score = fitness[best_idx]
+        worst_score = fitness[worst_idx]
+        
+        # Update global best if better
+        if best_score < global_best_score:
+            global_best_solution = best_solution.copy()
+            global_best_score = best_score
+        
+        # Track history
         best_scores.append(best_score)
+        if track_history:
+            convergence_history['best_scores'].append(best_score)
+            convergence_history['best_solutions'].append(best_solution.copy())
+            convergence_history['worst_scores'].append(worst_score)
+            convergence_history['mean_scores'].append(np.mean(fitness))
+            
+            # Calculate population diversity (mean pairwise Euclidean distance)
+            diversity = 0
+            if population_size > 1:
+                for i in range(population_size):
+                    for j in range(i+1, population_size):
+                        diversity += np.linalg.norm(population[i] - population[j])
+                diversity /= (population_size * (population_size - 1) / 2)
+            convergence_history['population_diversity'].append(diversity)
         
         # Calculate mean of the population
         mean_solution = np.mean(population, axis=0)
         
         # Teacher Phase
-        new_population = np.zeros_like(population)
         for i in range(population_size):
             # Teaching factor (either 1 or 2)
             TF = np.random.randint(1, 3)
@@ -1013,8 +1616,221 @@ def GOTLBO_algorithm(bounds, num_iterations, population_size, num_variables, obj
             
             # Accept if better
             if new_fitness < fitness[i]:
+                population[i] = new_solution
+                fitness[i] = new_fitness
+                if track_history:
+                    teacher_phase_improvements += 1
+        
+        # Learner Phase
+        for i in range(population_size):
+            # Select another learner randomly
+            j = np.random.randint(population_size)
+            while j == i:
+                j = np.random.randint(population_size)
+            
+            # Generate new solution based on interaction with another learner
+            if fitness[i] < fitness[j]:  # If current solution is better
+                new_solution = population[i] + np.random.rand(num_variables) * (population[i] - population[j])
+            else:  # If other solution is better
+                new_solution = population[i] + np.random.rand(num_variables) * (population[j] - population[i])
+            
+            # Ensure bounds are respected
+            new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
+            
+            # Evaluate new solution
+            if constraints:
+                new_fitness = constrained_objective_function(new_solution, objective_func, constraints)
+            else:
+                new_fitness = objective_func(new_solution)
+            
+            # Accept if better
+            if new_fitness < fitness[i]:
+                population[i] = new_solution
+                fitness[i] = new_fitness
+                if track_history:
+                    learner_phase_improvements += 1
+        
+        # Oppositional Learning Phase (for the worst half of the population)
+        sorted_indices = np.argsort(fitness)
+        for i in range(population_size // 2, population_size):
+            idx = sorted_indices[i]
+            
+            # Generate opposite solution
+            opp_solution = opposite_solution(population[idx], bounds)
+            
+            # Evaluate opposite solution
+            if constraints:
+                opp_fitness = constrained_objective_function(opp_solution, objective_func, constraints)
+            else:
+                opp_fitness = objective_func(opp_solution)
+            
+            # Accept if better
+            if opp_fitness < fitness[idx]:
+                population[idx] = opp_solution
+                fitness[idx] = opp_fitness
+                if track_history:
+                    opposition_phase_improvements += 1
+        
+        # Track phase improvements
+        if track_history:
+            convergence_history['teacher_phase_improvements'].append(teacher_phase_improvements)
+            convergence_history['learner_phase_improvements'].append(learner_phase_improvements)
+            convergence_history['opposition_phase_improvements'].append(opposition_phase_improvements)
+        
+        # End timing for this iteration
+        if track_history:
+            end_time = time.time()
+            convergence_history['iteration_times'].append(end_time - start_time)
+    
+    # Return appropriate results based on track_history flag
+    if track_history:
+        return global_best_solution, best_scores, convergence_history
+    else:
+        return global_best_solution, best_scores
+
+
+def ITLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
+    """
+    Implementation of the Improved Teaching-Learning-Based Optimization (ITLBO) algorithm.
+    
+    ITLBO enhances the standard TLBO algorithm by incorporating elitism and adaptive teaching factor
+    to improve convergence speed and solution quality.
+    
+    Reference: Rao, R.V., Patel, V. (2013). "An improved teaching-learning-based optimization algorithm
+    for solving unconstrained optimization problems."
+    
+    Parameters:
+    -----------
+    bounds : numpy.ndarray
+        Bounds for each variable, shape (num_variables, 2)
+    num_iterations : int
+        Number of iterations to run the algorithm
+    population_size : int
+        Size of the population
+    num_variables : int
+        Number of variables in the optimization problem
+    objective_func : function
+        Objective function to minimize
+    constraints : list, optional
+        List of constraint functions
+    track_history : bool, optional
+        Whether to track detailed convergence history (default: True)
+        
+    Returns:
+    --------
+    best_solution : numpy.ndarray
+        Best solution found
+    best_scores : list
+        Best score in each iteration (returned if track_history is False)
+    convergence_history : dict
+        Detailed convergence history (returned if track_history is True)
+    """
+    # Initialize population
+    population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
+    
+    # Initialize history tracking
+    best_scores = []
+    if track_history:
+        convergence_history = {
+            'best_scores': [],
+            'best_solutions': [],
+            'worst_scores': [],
+            'mean_scores': [],
+            'population_diversity': [],
+            'iteration_times': [],
+            'teacher_phase_improvements': [],
+            'learner_phase_improvements': [],
+            'elite_scores': []
+        }
+    
+    # Track the global best solution across all iterations
+    global_best_solution = None
+    global_best_score = float('inf')
+    
+    # Elite size (typically a small percentage of the population)
+    elite_size = max(1, int(0.1 * population_size))
+    
+    for iteration in range(num_iterations):
+        # Start timing this iteration if tracking history
+        if track_history:
+            import time
+            start_time = time.time()
+            teacher_phase_improvements = 0
+            learner_phase_improvements = 0
+        
+        # Evaluate fitness
+        if constraints:
+            fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
+        else:
+            fitness = np.apply_along_axis(objective_func, 1, population)
+        
+        # Get best and worst solutions for this iteration
+        best_idx = np.argmin(fitness)
+        worst_idx = np.argmax(fitness)
+        best_solution = population[best_idx].copy()
+        worst_solution = population[worst_idx].copy()
+        best_score = fitness[best_idx]
+        worst_score = fitness[worst_idx]
+        
+        # Update global best if better
+        if best_score < global_best_score:
+            global_best_solution = best_solution.copy()
+            global_best_score = best_score
+        
+        # Store elite solutions
+        elite_indices = np.argsort(fitness)[:elite_size]
+        elite_solutions = population[elite_indices].copy()
+        elite_fitness = [fitness[i] for i in elite_indices]
+        
+        # Track history
+        best_scores.append(best_score)
+        if track_history:
+            convergence_history['best_scores'].append(best_score)
+            convergence_history['best_solutions'].append(best_solution.copy())
+            convergence_history['worst_scores'].append(worst_score)
+            convergence_history['mean_scores'].append(np.mean(fitness))
+            convergence_history['elite_scores'].append(np.mean(elite_fitness))
+            
+            # Calculate population diversity (mean pairwise Euclidean distance)
+            diversity = 0
+            if population_size > 1:
+                for i in range(population_size):
+                    for j in range(i+1, population_size):
+                        diversity += np.linalg.norm(population[i] - population[j])
+                diversity /= (population_size * (population_size - 1) / 2)
+            convergence_history['population_diversity'].append(diversity)
+        
+        # Calculate mean of the population
+        mean_solution = np.mean(population, axis=0)
+        
+        # Teacher Phase
+        new_population = np.zeros_like(population)
+        for i in range(population_size):
+            # Adaptive teaching factor based on fitness
+            # Better solutions get smaller TF (more precise adjustments)
+            # Worse solutions get larger TF (more exploration)
+            normalized_rank = np.argsort(np.argsort(fitness))[i] / (population_size - 1)
+            TF = 1 + normalized_rank  # TF will be between 1 and 2
+            
+            # Generate new solution based on teacher
+            r = np.random.rand(num_variables)
+            new_solution = population[i] + r * (best_solution - TF * mean_solution)
+            
+            # Ensure bounds are respected
+            new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
+            
+            # Evaluate new solution
+            if constraints:
+                new_fitness = constrained_objective_function(new_solution, objective_func, constraints)
+            else:
+                new_fitness = objective_func(new_solution)
+            
+            # Accept if better
+            if new_fitness < fitness[i]:
                 new_population[i] = new_solution
                 fitness[i] = new_fitness
+                if track_history:
+                    teacher_phase_improvements += 1
             else:
                 new_population[i] = population[i]
         
@@ -1024,7 +1840,7 @@ def GOTLBO_algorithm(bounds, num_iterations, population_size, num_variables, obj
         # Learner Phase
         new_population = np.zeros_like(population)
         for i in range(population_size):
-            # Select another solution randomly, different from i
+            # Select another learner randomly, different from i
             j = i
             while j == i:
                 j = np.random.randint(0, population_size)
@@ -1047,168 +1863,9 @@ def GOTLBO_algorithm(bounds, num_iterations, population_size, num_variables, obj
             # Accept if better
             if new_fitness < fitness[i]:
                 new_population[i] = new_solution
-            else:
-                new_population[i] = population[i]
-        
-        # Update population after Learner Phase
-        population = new_population.copy()
-    
-    # Find the best solution in the final population
-    if constraints:
-        fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
-    else:
-        fitness = np.apply_along_axis(objective_func, 1, population)
-    
-    best_idx = np.argmin(fitness)
-    best_solution = population[best_idx]
-    
-    # Return the best solution and the history of best scores
-    return best_solution, best_scores
-
-
-def ITLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None):
-    """
-    Implementation of the Improved Teaching-Learning-Based Optimization (ITLBO) algorithm by R.V. Rao.
-    
-    ITLBO enhances TLBO by modifying the teacher phase and learner phase for better convergence
-    and solution quality.
-    
-    Reference: Rao, R.V., Patel, V. (2013). "An elitist teaching-learning-based optimization algorithm 
-    for solving complex constrained optimization problems."
-    
-    Parameters:
-    -----------
-    bounds : numpy.ndarray
-        Bounds for each variable, shape (num_variables, 2)
-    num_iterations : int
-        Number of iterations to run the algorithm
-    population_size : int
-        Size of the population
-    num_variables : int
-        Number of variables in the optimization problem
-    objective_func : function
-        Objective function to minimize
-    constraints : list, optional
-        List of constraint functions
-        
-    Returns:
-    --------
-    best_solution : numpy.ndarray
-        Best solution found
-    best_scores : list
-        Best score in each iteration
-    """
-    # Initialize population
-    population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
-    
-    # Initialize best scores list
-    best_scores = []
-    
-    # Elite size (typically a small percentage of the population)
-    elite_size = max(1, int(0.1 * population_size))
-    
-    for iteration in range(num_iterations):
-        # Evaluate fitness of the population
-        if constraints:
-            fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
-        else:
-            fitness = np.apply_along_axis(objective_func, 1, population)
-        
-        # Store elite solutions
-        elite_indices = np.argsort(fitness)[:elite_size]
-        elite_solutions = population[elite_indices].copy()
-        elite_fitness = np.array(fitness)[elite_indices].copy()
-        
-        # Find the best solution (teacher)
-        best_idx = np.argmin(fitness)
-        best_solution = population[best_idx]
-        
-        # Record the best score
-        best_score = fitness[best_idx]
-        best_scores.append(best_score)
-        
-        # Calculate mean of the population
-        mean_solution = np.mean(population, axis=0)
-        
-        # Improved Teacher Phase
-        new_population = np.zeros_like(population)
-        for i in range(population_size):
-            # Teaching factor (adaptive based on iteration)
-            TF = 1 + np.random.rand()  # Between 1 and 2, continuous
-            
-            # Generate new solution based on best solution (teacher)
-            r = np.random.rand(num_variables)
-            
-            # Improved teacher phase formula
-            diff_mean = best_solution - TF * mean_solution
-            new_solution = population[i] + r * diff_mean
-            
-            # Add influence from elite solutions
-            if i not in elite_indices:  # Don't modify elite solutions
-                elite_idx = np.random.choice(elite_indices)
-                new_solution += np.random.rand(num_variables) * 0.1 * (elite_solutions[0] - population[i])
-            
-            # Ensure bounds are respected
-            new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
-            
-            # Evaluate new solution
-            if constraints:
-                new_fitness = constrained_objective_function(new_solution, objective_func, constraints)
-            else:
-                new_fitness = objective_func(new_solution)
-            
-            # Accept if better
-            if new_fitness < fitness[i]:
-                new_population[i] = new_solution
                 fitness[i] = new_fitness
-            else:
-                new_population[i] = population[i]
-        
-        # Update population after Teacher Phase
-        population = new_population.copy()
-        
-        # Improved Learner Phase
-        new_population = np.zeros_like(population)
-        for i in range(population_size):
-            # Select two other solutions randomly, different from i and from each other
-            j, k = i, i
-            while j == i:
-                j = np.random.randint(0, population_size)
-            while k == i or k == j:
-                k = np.random.randint(0, population_size)
-            
-            # Generate new solution based on interaction with other learners
-            if fitness[i] < fitness[j]:  # i is better than j
-                # Move toward i and away from j
-                new_solution = population[i] + np.random.rand(num_variables) * (population[i] - population[j])
-                
-                # Add influence from a third solution
-                if fitness[i] < fitness[k]:  # i is better than k
-                    new_solution += np.random.rand(num_variables) * 0.5 * (population[i] - population[k])
-                else:  # k is better than i
-                    new_solution += np.random.rand(num_variables) * 0.5 * (population[k] - population[i])
-            else:  # j is better than i
-                # Move toward j and away from i
-                new_solution = population[i] + np.random.rand(num_variables) * (population[j] - population[i])
-                
-                # Add influence from a third solution
-                if fitness[j] < fitness[k]:  # j is better than k
-                    new_solution += np.random.rand(num_variables) * 0.5 * (population[j] - population[k])
-                else:  # k is better than j
-                    new_solution += np.random.rand(num_variables) * 0.5 * (population[k] - population[j])
-            
-            # Ensure bounds are respected
-            new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
-            
-            # Evaluate new solution
-            if constraints:
-                new_fitness = constrained_objective_function(new_solution, objective_func, constraints)
-            else:
-                new_fitness = objective_func(new_solution)
-            
-            # Accept if better
-            if new_fitness < fitness[i]:
-                new_population[i] = new_solution
+                if track_history:
+                    learner_phase_improvements += 1
             else:
                 new_population[i] = population[i]
         
@@ -1216,37 +1873,36 @@ def ITLBO_algorithm(bounds, num_iterations, population_size, num_variables, obje
         population = new_population.copy()
         
         # Apply elitism: replace worst solutions with elite solutions
-        if constraints:
-            fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
-        else:
-            fitness = np.apply_along_axis(objective_func, 1, population)
-            
-        worst_indices = np.argsort(fitness)[-elite_size:]
+        worst_indices = np.argsort(fitness)[-int(0.1*population_size):]
         for i, idx in enumerate(worst_indices):
             population[idx] = elite_solutions[i]
+        
+        # Track phase improvements
+        if track_history:
+            convergence_history['teacher_phase_improvements'].append(teacher_phase_improvements)
+            convergence_history['learner_phase_improvements'].append(learner_phase_improvements)
+        
+        # End timing for this iteration
+        if track_history:
+            end_time = time.time()
+            convergence_history['iteration_times'].append(end_time - start_time)
     
-    # Find the best solution in the final population
-    if constraints:
-        fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
+    # Return appropriate results based on track_history flag
+    if track_history:
+        return global_best_solution, best_scores, convergence_history
     else:
-        fitness = np.apply_along_axis(objective_func, 1, population)
-    
-    best_idx = np.argmin(fitness)
-    best_solution = population[best_idx]
-    
-    # Return the best solution and the history of best scores
-    return best_solution, best_scores
+        return global_best_solution, best_scores
 
 
-def MultiObjective_TLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_funcs, constraints=None):
+def MultiObjective_TLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_funcs, constraints=None, track_history=True):
     """
-    Implementation of the Multi-objective Teaching-Learning-Based Optimization (MO-TLBO) algorithm by R.V. Rao.
+    Implementation of the Multi-Objective Teaching-Learning-Based Optimization (MO-TLBO) algorithm.
     
-    MO-TLBO extends TLBO to handle multi-objective optimization problems using Pareto dominance
-    and crowding distance for selection.
+    MO-TLBO extends the TLBO algorithm to handle multiple objective functions simultaneously,
+    finding a set of Pareto-optimal solutions.
     
-    Reference: Rao, R.V., Kalyankar, V.D. (2013). "Multi-objective TLBO algorithm for optimization 
-    of modern machining processes."
+    Reference: Rao, R.V., Patel, V. (2014). "An improved teaching-learning-based optimization algorithm 
+    for solving multi-objective optimization problems."
     
     Parameters:
     -----------
@@ -1262,6 +1918,8 @@ def MultiObjective_TLBO_algorithm(bounds, num_iterations, population_size, num_v
         List of objective functions to minimize
     constraints : list, optional
         List of constraint functions
+    track_history : bool, optional
+        Whether to track detailed convergence history (default: True)
         
     Returns:
     --------
@@ -1269,8 +1927,8 @@ def MultiObjective_TLBO_algorithm(bounds, num_iterations, population_size, num_v
         Set of non-dominated solutions (Pareto front)
     pareto_fitness : numpy.ndarray
         Fitness values of the Pareto front solutions
-    best_scores_history : list
-        History of best scores for each objective
+    convergence_history : dict
+        Detailed convergence history (returned if track_history is True)
     """
     # Number of objective functions
     num_objectives = len(objective_funcs)
@@ -1278,419 +1936,205 @@ def MultiObjective_TLBO_algorithm(bounds, num_iterations, population_size, num_v
     # Initialize population
     population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
     
-    # Initialize fitness matrix (population_size x num_objectives)
-    fitness_matrix = np.zeros((population_size, num_objectives))
+    # Initialize history tracking
+    if track_history:
+        convergence_history = {
+            'pareto_front_size': [],
+            'pareto_fronts': [],
+            'pareto_fitness': [],
+            'population_diversity': [],
+            'iteration_times': [],
+            'teacher_phase_improvements': [],
+            'learner_phase_improvements': [],
+            'hypervolume': []
+        }
     
-    # Initialize best scores history
-    best_scores_history = [[] for _ in range(num_objectives)]
+    # Function to evaluate all objectives
+    def evaluate_objectives(solution):
+        return np.array([func(solution) for func in objective_funcs])
     
-    # Function to evaluate all objectives for a solution
-    def evaluate_solution(solution):
-        if constraints:
-            # Apply penalty for constraint violations
-            return [constrained_objective_function(solution, obj_func, constraints) for obj_func in objective_funcs]
-        else:
-            return [obj_func(solution) for obj_func in objective_funcs]
-    
-    # Function to check if solution a dominates solution b
-    def dominates(a_idx, b_idx):
-        # a dominates b if a is no worse than b in all objectives and better in at least one
-        better_in_one = False
-        for j in range(num_objectives):
-            if fitness_matrix[a_idx, j] > fitness_matrix[b_idx, j]:
-                return False  # a is worse than b in at least one objective
-            elif fitness_matrix[a_idx, j] < fitness_matrix[b_idx, j]:
-                better_in_one = True  # a is better than b in at least one objective
-        return better_in_one  # a dominates b if it's better in at least one objective
+    # Function to check if solution1 dominates solution2
+    def dominates(fitness1, fitness2):
+        # For minimization problems
+        return np.all(fitness1 <= fitness2) and np.any(fitness1 < fitness2)
     
     # Function to find non-dominated solutions (Pareto front)
-    def find_pareto_front(population, fitness_matrix):
+    def find_pareto_front(population, fitness):
         pareto_indices = []
         for i in range(len(population)):
             dominated = False
             for j in range(len(population)):
-                if i != j and dominates(j, i):
+                if i != j and dominates(fitness[j], fitness[i]):
                     dominated = True
                     break
             if not dominated:
                 pareto_indices.append(i)
-        return population[pareto_indices], fitness_matrix[pareto_indices]
+        return population[pareto_indices], fitness[pareto_indices]
     
-    # Function to calculate crowding distance
-    def calculate_crowding_distance(fitness_matrix):
-        # Number of solutions
-        n = fitness_matrix.shape[0]
+    # Function to calculate hypervolume (approximate)
+    def calculate_hypervolume(pareto_fitness, reference_point):
+        if len(pareto_fitness) == 0:
+            return 0
         
-        # Initialize crowding distance
-        crowding_distance = np.zeros(n)
+        # Sort by first objective
+        sorted_indices = np.argsort(pareto_fitness[:, 0])
+        sorted_fitness = pareto_fitness[sorted_indices]
         
-        # For each objective
-        for i in range(num_objectives):
-            # Sort solutions by the i-th objective
-            sorted_indices = np.argsort(fitness_matrix[:, i])
+        # Calculate hypervolume
+        hv = 0
+        for i in range(len(sorted_fitness)):
+            if i == 0:
+                width = reference_point[0] - sorted_fitness[i, 0]
+            else:
+                width = sorted_fitness[i-1, 0] - sorted_fitness[i, 0]
             
-            # Set boundary solutions to infinity
-            crowding_distance[sorted_indices[0]] = float('inf')
-            crowding_distance[sorted_indices[-1]] = float('inf')
+            height = reference_point[1] - sorted_fitness[i, 1]
+            hv += width * height
+        
+        return hv
+    
+    # Evaluate initial population
+    fitness = np.array([evaluate_objectives(ind) for ind in population])
+    
+    # Find initial Pareto front
+    pareto_front, pareto_fitness = find_pareto_front(population, fitness)
+    
+    # Reference point for hypervolume calculation (worst value in each objective + some margin)
+    reference_point = np.max(fitness, axis=0) * 1.1
+    
+    for iteration in range(num_iterations):
+        # Start timing this iteration if tracking history
+        if track_history:
+            import time
+            start_time = time.time()
+            teacher_phase_improvements = 0
+            learner_phase_improvements = 0
+        
+        # Calculate mean of the population
+        mean_solution = np.mean(population, axis=0)
+        
+        # Teacher Phase
+        for i in range(population_size):
+            # Select a random solution from the Pareto front as teacher
+            if len(pareto_front) > 0:
+                teacher_idx = np.random.randint(len(pareto_front))
+                teacher = pareto_front[teacher_idx]
+            else:
+                # If no Pareto front yet, use the best solution for the first objective
+                best_idx = np.argmin(fitness[:, 0])
+                teacher = population[best_idx]
             
-            # Calculate crowding distance for intermediate solutions
-            f_max = fitness_matrix[sorted_indices[-1], i]
-            f_min = fitness_matrix[sorted_indices[0], i]
+            # Teaching factor (either 1 or 2)
+            TF = np.random.randint(1, 3)
             
-            # Avoid division by zero
-            if f_max == f_min:
+            # Generate new solution
+            r = np.random.rand(num_variables)
+            
+            # Improved teacher phase formula
+            diff_mean = teacher - TF * mean_solution
+            new_solution = population[i] + r * diff_mean
+            
+            # Add influence from elite solutions
+            if i not in np.argsort(fitness[:, 0])[:int(0.1*population_size)]:  # Don't modify elite solutions
+                elite_idx = np.random.choice(np.argsort(fitness[:, 0])[:int(0.1*population_size)])
+                new_solution += np.random.rand(num_variables) * 0.1 * (population[elite_idx] - population[i])
+            
+            # Ensure bounds are respected
+            new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
+            
+            # Evaluate new solution
+            if constraints and any(constraint(new_solution) > 0 for constraint in constraints):
+                # Skip if constraints are violated
                 continue
             
-            # Calculate crowding distance for each solution
-            for j in range(1, n-1):
-                crowding_distance[sorted_indices[j]] += (fitness_matrix[sorted_indices[j+1], i] - 
-                                                        fitness_matrix[sorted_indices[j-1], i]) / (f_max - f_min)
-        
-        return crowding_distance
-    
-    # Function to select the best solution as teacher
-    def select_teacher(fitness_matrix):
-        # Find non-dominated solutions
-        non_dominated_indices = []
-        for i in range(population_size):
-            dominated = False
-            for j in range(population_size):
-                if i != j and dominates(j, i):
-                    dominated = True
-                    break
-            if not dominated:
-                non_dominated_indices.append(i)
-        
-        # If there are multiple non-dominated solutions, select one randomly
-        if len(non_dominated_indices) > 0:
-            return np.random.choice(non_dominated_indices)
-        else:
-            # Fallback: select the solution with the best average rank across all objectives
-            ranks = np.zeros(population_size)
-            for j in range(num_objectives):
-                # Sort by j-th objective
-                sorted_indices = np.argsort(fitness_matrix[:, j])
-                # Assign ranks
-                for rank, idx in enumerate(sorted_indices):
-                    ranks[idx] += rank
-            # Return solution with best average rank
-            return np.argmin(ranks)
-    
-    # Main loop
-    for iteration in range(num_iterations):
-        # Evaluate fitness of the population
-        for i in range(population_size):
-            fitness_matrix[i] = evaluate_solution(population[i])
-        
-        # Record best scores for each objective
-        for j in range(num_objectives):
-            best_scores_history[j].append(np.min(fitness_matrix[:, j]))
-        
-        # Teacher Phase
-        # Select the best solution as teacher
-        teacher_idx = select_teacher(fitness_matrix)
-        teacher = population[teacher_idx]
-        
-        # Calculate mean of the population
-        mean_solution = np.mean(population, axis=0)
-        
-        # Update each solution
-        new_population = np.zeros_like(population)
-        for i in range(population_size):
-            # Teaching factor (either 1 or 2)
-            TF = np.random.randint(1, 3)
+            new_fitness = evaluate_objectives(new_solution)
             
-            # Generate new solution based on teacher
-            r = np.random.rand(num_variables)
-            new_solution = population[i] + r * (teacher - TF * mean_solution)
-            
-            # Ensure bounds are respected
-            new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
-            
-            # Evaluate new solution
-            new_fitness = evaluate_solution(new_solution)
-            
-            # Compare new solution with old solution
-            old_dominates_new = False
-            new_dominates_old = False
-            
-            # Check if old solution dominates new solution
-            better_in_one = False
-            worse_in_one = False
-            for j in range(num_objectives):
-                if fitness_matrix[i, j] < new_fitness[j]:
-                    better_in_one = True
-                elif fitness_matrix[i, j] > new_fitness[j]:
-                    worse_in_one = True
-            
-            old_dominates_new = better_in_one and not worse_in_one
-            new_dominates_old = worse_in_one and not better_in_one
-            
-            # Accept if better
-            if new_dominates_old or (not old_dominates_new and not new_dominates_old and np.random.rand() < 0.5):
-                new_population[i] = new_solution
-                fitness_matrix[i] = new_fitness
-            else:
-                new_population[i] = population[i]
-        
-        # Update population after Teacher Phase
-        population = new_population.copy()
-        
-        # Learner Phase
-        new_population = np.zeros_like(population)
-        for i in range(population_size):
-            # Select another solution randomly, different from i
-            j = i
-            while j == i:
-                j = np.random.randint(0, population_size)
-            
-            # Determine which solution is better
-            i_dominates_j = dominates(i, j)
-            j_dominates_i = dominates(j, i)
-            
-            # Generate new solution based on dominance
-            if i_dominates_j:  # i is better than j
-                new_solution = population[i] + np.random.rand(num_variables) * (population[i] - population[j])
-            elif j_dominates_i:  # j is better than i
-                new_solution = population[i] + np.random.rand(num_variables) * (population[j] - population[i])
-            else:  # Neither dominates, choose randomly
-                if np.random.rand() < 0.5:
-                    new_solution = population[i] + np.random.rand(num_variables) * (population[i] - population[j])
-                else:
-                    new_solution = population[i] + np.random.rand(num_variables) * (population[j] - population[i])
-            
-            # Ensure bounds are respected
-            new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
-            
-            # Evaluate new solution
-            new_fitness = evaluate_solution(new_solution)
-            
-            # Compare new solution with old solution
-            old_dominates_new = False
-            new_dominates_old = False
-            
-            # Check if old solution dominates new solution
-            better_in_one = False
-            worse_in_one = False
-            for j in range(num_objectives):
-                if fitness_matrix[i, j] < new_fitness[j]:
-                    better_in_one = True
-                elif fitness_matrix[i, j] > new_fitness[j]:
-                    worse_in_one = True
-            
-            old_dominates_new = better_in_one and not worse_in_one
-            new_dominates_old = worse_in_one and not better_in_one
-            
-            # Accept if better
-            if new_dominates_old or (not old_dominates_new and not new_dominates_old and np.random.rand() < 0.5):
-                new_population[i] = new_solution
-                fitness_matrix[i] = new_fitness
-            else:
-                new_population[i] = population[i]
-        
-        # Update population after Learner Phase
-        population = new_population.copy()
-    
-    # Find the Pareto front in the final population
-    for i in range(population_size):
-        fitness_matrix[i] = evaluate_solution(population[i])
-    
-    pareto_front, pareto_fitness = find_pareto_front(population, fitness_matrix)
-    
-    return pareto_front, pareto_fitness, best_scores_history
-
-
-def GOTLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None):
-    """
-    Implementation of the Generalized Oppositional Teaching-Learning-Based Optimization (GOTLBO) algorithm by R.V. Rao.
-    
-    GOTLBO enhances the standard TLBO algorithm by incorporating oppositional-based learning
-    to improve convergence speed and solution quality.
-    
-    Reference: Rao, R.V., Patel, V. (2014). "An improved teaching-learning-based optimization algorithm 
-    for solving unconstrained optimization problems."
-    
-    Parameters:
-    -----------
-    bounds : numpy.ndarray
-        Bounds for each variable, shape (num_variables, 2)
-    num_iterations : int
-        Number of iterations to run the algorithm
-    population_size : int
-        Size of the population
-    num_variables : int
-        Number of variables in the optimization problem
-    objective_func : function
-        Objective function to minimize
-    constraints : list, optional
-        List of constraint functions
-        
-    Returns:
-    --------
-    best_solution : numpy.ndarray
-        Best solution found
-    best_scores : list
-        Best score in each iteration
-    """
-    # Initialize population
-    population = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1], size=(population_size, num_variables))
-    
-    # Initialize best scores list
-    best_scores = []
-    
-    # Function to create generalized opposition-based solution
-    def generalized_opposition(solution, a, b, k=0.3):
-        """
-        Generate a generalized opposition-based solution.
-        
-        Parameters:
-        -----------
-        solution : numpy.ndarray
-            Original solution
-        a : numpy.ndarray
-            Lower bounds
-        b : numpy.ndarray
-            Upper bounds
-        k : float
-            Random coefficient between 0 and 1
-            
-        Returns:
-        --------
-        opp_solution : numpy.ndarray
-            Generalized opposition-based solution
-        """
-        # Generate random coefficient
-        k = np.random.uniform(0, 1)
-        
-        # Calculate generalized opposition
-        opp_solution = k * (a + b) - solution
-        
-        # Ensure bounds are respected
-        opp_solution = np.clip(opp_solution, a, b)
-        
-        return opp_solution
-    
-    # Main loop
-    for iteration in range(num_iterations):
-        # Evaluate fitness of the population
-        if constraints:
-            fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
-        else:
-            fitness = np.apply_along_axis(objective_func, 1, population)
-        
-        # Find the best solution (teacher)
-        best_idx = np.argmin(fitness)
-        best_solution = population[best_idx]
-        
-        # Record the best score
-        best_score = fitness[best_idx]
-        best_scores.append(best_score)
-        
-        # Calculate mean of the population
-        mean_solution = np.mean(population, axis=0)
-        
-        # Teacher Phase
-        new_population = np.zeros_like(population)
-        for i in range(population_size):
-            # Teaching factor (either 1 or 2)
-            TF = np.random.randint(1, 3)
-            
-            # Generate new solution based on teacher
-            r = np.random.rand(num_variables)
-            new_solution = population[i] + r * (best_solution - TF * mean_solution)
-            
-            # Ensure bounds are respected
-            new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
-            
-            # Generate opposition-based solution
-            opp_solution = generalized_opposition(new_solution, bounds[:, 0], bounds[:, 1])
-            
-            # Evaluate both solutions
-            if constraints:
-                new_fitness = constrained_objective_function(new_solution, objective_func, constraints)
-                opp_fitness = constrained_objective_function(opp_solution, objective_func, constraints)
-            else:
-                new_fitness = objective_func(new_solution)
-                opp_fitness = objective_func(opp_solution)
-            
-            # Select the better solution
-            if opp_fitness < new_fitness and opp_fitness < fitness[i]:
-                new_population[i] = opp_solution
-                fitness[i] = opp_fitness
-            elif new_fitness < fitness[i]:
-                new_population[i] = new_solution
+            # Accept if new solution dominates current solution or is non-dominated
+            if dominates(new_fitness, fitness[i]) or not dominates(fitness[i], new_fitness):
+                population[i] = new_solution
                 fitness[i] = new_fitness
-            else:
-                new_population[i] = population[i]
-        
-        # Update population after Teacher Phase
-        population = new_population.copy()
+                if track_history:
+                    teacher_phase_improvements += 1
         
         # Learner Phase
-        new_population = np.zeros_like(population)
         for i in range(population_size):
-            # Select another solution randomly, different from i
-            j = i
+            # Select another learner randomly
+            j = np.random.randint(population_size)
             while j == i:
-                j = np.random.randint(0, population_size)
+                j = np.random.randint(population_size)
             
-            # Generate new solution based on interaction with another learner
-            if fitness[i] < fitness[j]:  # If current solution is better
+            # Determine which solution is better (using non-domination)
+            if dominates(fitness[i], fitness[j]):
+                # i dominates j
                 new_solution = population[i] + np.random.rand(num_variables) * (population[i] - population[j])
+                
+                # Add influence from a third solution
+                if dominates(fitness[i], fitness[j]):  # If current solution is better than j
+                    new_solution += np.random.rand(num_variables) * 0.5 * (population[i] - population[j])
+                else:  # If j is better than current solution
+                    new_solution += np.random.rand(num_variables) * 0.5 * (population[j] - population[i])
             else:  # If other solution is better
+                # Move toward j and away from i
                 new_solution = population[i] + np.random.rand(num_variables) * (population[j] - population[i])
+                
+                # Add influence from a third solution
+                if dominates(fitness[j], fitness[i]):  # If j is better than i
+                    new_solution += np.random.rand(num_variables) * 0.5 * (population[j] - population[i])
+                else:  # If i is better than j
+                    new_solution += np.random.rand(num_variables) * 0.5 * (population[i] - population[j])
             
             # Ensure bounds are respected
             new_solution = np.clip(new_solution, bounds[:, 0], bounds[:, 1])
             
-            # Generate opposition-based solution
-            opp_solution = generalized_opposition(new_solution, bounds[:, 0], bounds[:, 1])
+            # Evaluate new solution
+            if constraints and any(constraint(new_solution) > 0 for constraint in constraints):
+                # Skip if constraints are violated
+                continue
             
-            # Evaluate both solutions
-            if constraints:
-                new_fitness = constrained_objective_function(new_solution, objective_func, constraints)
-                opp_fitness = constrained_objective_function(opp_solution, objective_func, constraints)
-            else:
-                new_fitness = objective_func(new_solution)
-                opp_fitness = objective_func(opp_solution)
+            new_fitness = evaluate_objectives(new_solution)
             
-            # Select the better solution
-            if opp_fitness < new_fitness and opp_fitness < fitness[i]:
-                new_population[i] = opp_solution
-                fitness[i] = opp_fitness
-            elif new_fitness < fitness[i]:
-                new_population[i] = new_solution
+            # Accept if new solution dominates current solution or is non-dominated
+            if dominates(new_fitness, fitness[i]) or not dominates(fitness[i], new_fitness):
+                population[i] = new_solution
                 fitness[i] = new_fitness
+                if track_history:
+                    learner_phase_improvements += 1
+        
+        # Update Pareto front
+        pareto_front, pareto_fitness = find_pareto_front(population, fitness)
+        
+        # Track history
+        if track_history:
+            convergence_history['pareto_front_size'].append(len(pareto_front))
+            convergence_history['pareto_fronts'].append(pareto_front.copy())
+            convergence_history['pareto_fitness'].append(pareto_fitness.copy())
+            
+            # Calculate population diversity (mean pairwise Euclidean distance)
+            diversity = 0
+            if population_size > 1:
+                for i in range(population_size):
+                    for j in range(i+1, population_size):
+                        diversity += np.linalg.norm(population[i] - population[j])
+                diversity /= (population_size * (population_size - 1) / 2)
+            convergence_history['population_diversity'].append(diversity)
+            
+            # Track phase improvements
+            convergence_history['teacher_phase_improvements'].append(teacher_phase_improvements)
+            convergence_history['learner_phase_improvements'].append(learner_phase_improvements)
+            
+            # Calculate hypervolume if we have 2 objectives
+            if num_objectives == 2:
+                hv = calculate_hypervolume(pareto_fitness, reference_point)
+                convergence_history['hypervolume'].append(hv)
             else:
-                new_population[i] = population[i]
-        
-        # Update population after Learner Phase
-        population = new_population.copy()
-        
-        # Apply elitism: ensure the best solution is preserved
-        if constraints:
-            current_fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
-        else:
-            current_fitness = np.apply_along_axis(objective_func, 1, population)
-        
-        current_best_idx = np.argmin(current_fitness)
-        current_best_fitness = current_fitness[current_best_idx]
-        
-        # If the best solution from the previous iteration is better than the current best,
-        # replace the worst solution in the current population with the previous best
-        if best_score < current_best_fitness:
-            worst_idx = np.argmax(current_fitness)
-            population[worst_idx] = best_solution
-            current_fitness[worst_idx] = best_score
+                convergence_history['hypervolume'].append(None)
+            
+            # End timing for this iteration
+            end_time = time.time()
+            convergence_history['iteration_times'].append(end_time - start_time)
     
-    # Find the best solution in the final population
-    if constraints:
-        fitness = [constrained_objective_function(ind, objective_func, constraints) for ind in population]
+    # Return appropriate results based on track_history flag
+    if track_history:
+        return pareto_front, pareto_fitness, convergence_history
     else:
-        fitness = np.apply_along_axis(objective_func, 1, population)
-    
-    best_idx = np.argmin(fitness)
-    best_solution = population[best_idx]
-    
-    # Return the best solution and the history of best scores
-    return best_solution, best_scores
+        return pareto_front, pareto_fitness

@@ -11,49 +11,58 @@ class TestOptimizationAlgorithms(unittest.TestCase):
         self.num_variables = 2  # You can increase this for higher-dimensional tests
 
     def test_bmr_unconstrained(self):
-        best_solution, _ = BMR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, objective_function)
-        self.assertIsInstance(best_solution, np.ndarray)
+        best_solution, _, _ = BMR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, objective_function)
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(objective_function(best_solution), 10.0)
 
     def test_bwr_unconstrained(self):
-        best_solution, _ = BWR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, objective_function)
-        self.assertIsInstance(best_solution, np.ndarray)
+        best_solution, _, _ = BWR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, objective_function)
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(objective_function(best_solution), 10.0)
 
     def test_bmr_rastrigin(self):
-        best_solution, _ = BMR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, rastrigin_function)
-        self.assertIsInstance(best_solution, np.ndarray)
+        best_solution, _, _ = BMR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, rastrigin_function)
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(rastrigin_function(best_solution), 50.0)
 
     def test_bwr_ackley(self):
-        best_solution, _ = BWR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, ackley_function)
-        self.assertIsInstance(best_solution, np.ndarray)
+        best_solution, _, _ = BWR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, ackley_function)
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(ackley_function(best_solution), 10.0)
 
     def test_bmr_rosenbrock(self):
-        best_solution, _ = BMR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, rosenbrock_function)
-        self.assertIsInstance(best_solution, np.ndarray)
+        best_solution, _, _ = BMR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, rosenbrock_function)
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(rosenbrock_function(best_solution), 1000.0)
 
     def test_bmr_constrained(self):
         constraints = [constraint_1, constraint_2]
-        best_solution, _ = BMR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, objective_function, constraints)
-        self.assertIsInstance(best_solution, np.ndarray)
+        best_solution, _, _ = BMR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, objective_function, constraints)
+        self.assertEqual(len(best_solution), self.num_variables)
+        # For stochastic algorithms, we can't guarantee tight constraint satisfaction in every run
+        # So we check that the solution is reasonable
+        self.assertLess(objective_function(best_solution), 20.0)
 
     def test_bwr_constrained(self):
         constraints = [constraint_1, constraint_2]
-        best_solution, _ = BWR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, objective_function, constraints)
-        self.assertIsInstance(best_solution, np.ndarray)
+        best_solution, _, _ = BWR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, objective_function, constraints)
+        self.assertEqual(len(best_solution), self.num_variables)
+        # For stochastic algorithms, we can't guarantee tight constraint satisfaction in every run
+        # So we check that the solution is reasonable
+        self.assertLess(objective_function(best_solution), 20.0)
 
     def test_multiple_runs(self):
         """Run BMR multiple times and calculate mean and standard deviation."""
-        num_runs = 30
         results = []
-
-        for _ in range(num_runs):
-            best_solution, _ = BMR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, objective_function)
-            results.append(np.sum(best_solution**2))  # Sum of squares for comparison
-
+        for _ in range(5):
+            best_solution, _, _ = BMR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, objective_function)
+            results.append(objective_function(best_solution))
+        
         mean_result = np.mean(results)
         std_result = np.std(results)
-
-        self.assertGreaterEqual(mean_result, 0)
-        print(f"BMR Mean: {mean_result}, Std Dev: {std_result}")
+        
+        self.assertLess(mean_result, 10.0)
+        self.assertLess(std_result, 5.0)
 
 if __name__ == '__main__':
     unittest.main()

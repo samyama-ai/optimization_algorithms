@@ -1,5 +1,19 @@
-from .algorithms import BMR_algorithm, BWR_algorithm, Jaya_algorithm, Rao1_algorithm, Rao2_algorithm, Rao3_algorithm, TLBO_algorithm
-from .optimization import run_optimization, save_convergence_curve
+from .algorithms import (
+    BMR_algorithm, 
+    BWR_algorithm, 
+    Jaya_algorithm, 
+    Rao1_algorithm, 
+    Rao2_algorithm, 
+    Rao3_algorithm, 
+    TLBO_algorithm,
+    TLBO_with_Elitism_algorithm,
+    QOJAYA_algorithm,
+    JCRO_algorithm,
+    GOTLBO_algorithm,
+    ITLBO_algorithm,
+    MultiObjective_TLBO_algorithm
+)
+from .optimization import run_optimization, save_convergence_curve, save_convergence_history
 from .objective_functions import (
     objective_function, 
     rastrigin_function, 
@@ -21,8 +35,15 @@ __all__ = [
     'Rao2_algorithm',
     'Rao3_algorithm',
     'TLBO_algorithm',
+    'TLBO_with_Elitism_algorithm',
+    'QOJAYA_algorithm',
+    'JCRO_algorithm',
+    'GOTLBO_algorithm',
+    'ITLBO_algorithm',
+    'MultiObjective_TLBO_algorithm',
     'run_optimization',
     'save_convergence_curve',
+    'save_convergence_history',
     'objective_function',
     'rastrigin_function',
     'ackley_function',
@@ -32,5 +53,5 @@ __all__ = [
     'nonlinear_objective_function',
     'constraint_3',
     'constraint_4',
-    'constraint_5',
+    'constraint_5'
 ]

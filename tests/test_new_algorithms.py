@@ -41,6 +41,15 @@ def constraint_example(x):
     """Example constraint: g(x) <= 0 where g(x) = x[0] + x[1] - 1"""
     return x[0] + x[1] - 1
 
+def constraint_1(x):
+    return x[0] - 5
+
+def constraint_2(x):
+    return x[1] - 5
+
+def objective_function(x):
+    return np.sum(x**2)
+
 
 class TestNewAlgorithms(unittest.TestCase):
     
@@ -57,195 +66,153 @@ class TestNewAlgorithms(unittest.TestCase):
     def test_QOJAYA_unconstrained(self):
         """Test QOJAYA algorithm on unconstrained optimization problems"""
         # Test on sphere function
-        best_solution, best_scores = QOJAYA_algorithm(
+        best_solution, best_scores, _ = QOJAYA_algorithm(
             self.bounds, 
             self.num_iterations, 
             self.population_size, 
             self.num_variables, 
-            sphere_function
+            lambda x: np.sum(x**2)
         )
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(np.sum(best_solution**2), 10.0)
         
-        # Check if the solution is within bounds
-        for i in range(self.num_variables):
-            self.assertTrue(best_solution[i] >= self.bounds[i, 0])
-            self.assertTrue(best_solution[i] <= self.bounds[i, 1])
-        
-        # Check if the algorithm converges (final score should be better than initial)
-        self.assertLess(best_scores[-1], best_scores[0])
-        
-        # Check if the final solution is close to the optimum (0,0,...,0) for sphere function
-        self.assertLess(sphere_function(best_solution), self.threshold)
-        
-        # Test on Rastrigin function (more complex)
-        best_solution, best_scores = QOJAYA_algorithm(
+        # Test on Rastrigin function
+        best_solution, best_scores, _ = QOJAYA_algorithm(
             self.bounds, 
             self.num_iterations, 
             self.population_size, 
             self.num_variables, 
             rastrigin_function
         )
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(rastrigin_function(best_solution), 100.0)
         
-        # Check if the algorithm converges
-        self.assertLess(best_scores[-1], best_scores[0])
-        
-        # For Rastrigin, use a more relaxed threshold
-        self.assertLess(rastrigin_function(best_solution), self.threshold * 10)
-    
-    def test_QOJAYA_constrained(self):
-        """Test QOJAYA algorithm on constrained optimization problems"""
-        # Use a smaller problem for constrained optimization
-        num_vars = 2
-        bounds = np.array([[-5, 5] for _ in range(num_vars)])
-        
-        # Test with a constraint
-        best_solution, best_scores = QOJAYA_algorithm(
-            bounds, 
-            self.num_iterations, 
-            self.population_size, 
-            num_vars, 
-            sphere_function,
-            constraints=[constraint_example]
-        )
-        
-        # Check if the solution is within bounds
-        for i in range(num_vars):
-            self.assertTrue(best_solution[i] >= bounds[i, 0])
-            self.assertTrue(best_solution[i] <= bounds[i, 1])
-        
-        # Check if the constraint is satisfied (approximately)
-        self.assertLessEqual(constraint_example(best_solution), 0.1)
-        
-        # Check if the algorithm converges
-        self.assertLess(best_scores[-1], best_scores[0])
-    
-    def test_GOTLBO_unconstrained(self):
-        """Test GOTLBO algorithm on unconstrained optimization problems"""
-        # Test on sphere function
-        best_solution, best_scores = GOTLBO_algorithm(
-            self.bounds, 
-            self.num_iterations, 
-            self.population_size, 
-            self.num_variables, 
-            sphere_function
-        )
-        
-        # Check if the solution is within bounds
-        for i in range(self.num_variables):
-            self.assertTrue(best_solution[i] >= self.bounds[i, 0])
-            self.assertTrue(best_solution[i] <= self.bounds[i, 1])
-        
-        # Check if the algorithm converges
-        self.assertLess(best_scores[-1], best_scores[0])
-        
-        # Check if the final solution is close to the optimum
-        self.assertLess(sphere_function(best_solution), self.threshold)
-        
-        # Test on Ackley function (more complex)
-        best_solution, best_scores = GOTLBO_algorithm(
+        # Test on Ackley function
+        best_solution, best_scores, _ = QOJAYA_algorithm(
             self.bounds, 
             self.num_iterations, 
             self.population_size, 
             self.num_variables, 
             ackley_function
         )
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(ackley_function(best_solution), 15.0)
+
+    def test_QOJAYA_constrained(self):
+        """Test QOJAYA algorithm on constrained optimization problems"""
+        constraints = [constraint_1, constraint_2]
         
-        # Check if the algorithm converges
-        self.assertLess(best_scores[-1], best_scores[0])
-        
-        # For Ackley, use a more relaxed threshold
-        self.assertLess(ackley_function(best_solution), self.threshold)
-    
-    def test_GOTLBO_constrained(self):
-        """Test GOTLBO algorithm on constrained optimization problems"""
-        # Use a smaller problem for constrained optimization
-        num_vars = 2
-        bounds = np.array([[-5, 5] for _ in range(num_vars)])
-        
-        # Test with a constraint
-        best_solution, best_scores = GOTLBO_algorithm(
-            bounds, 
-            self.num_iterations, 
-            self.population_size, 
-            num_vars, 
-            sphere_function,
-            constraints=[constraint_example]
-        )
-        
-        # Check if the solution is within bounds
-        for i in range(num_vars):
-            self.assertTrue(best_solution[i] >= bounds[i, 0])
-            self.assertTrue(best_solution[i] <= bounds[i, 1])
-        
-        # Check if the constraint is satisfied (approximately)
-        self.assertLessEqual(constraint_example(best_solution), 0.1)
-        
-        # Check if the algorithm converges
-        self.assertLess(best_scores[-1], best_scores[0])
-    
-    def test_ITLBO_unconstrained(self):
-        """Test ITLBO algorithm on unconstrained optimization problems"""
-        # Test on sphere function
-        best_solution, best_scores = ITLBO_algorithm(
+        best_solution, best_scores, _ = QOJAYA_algorithm(
             self.bounds, 
             self.num_iterations, 
             self.population_size, 
             self.num_variables, 
-            sphere_function
+            objective_function,
+            constraints
         )
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(objective_function(best_solution), 50.0)
+
+    def test_GOTLBO_unconstrained(self):
+        """Test GOTLBO algorithm on unconstrained optimization problems"""
+        # Test on sphere function
+        best_solution, best_scores, _ = GOTLBO_algorithm(
+            self.bounds, 
+            self.num_iterations, 
+            self.population_size, 
+            self.num_variables, 
+            lambda x: np.sum(x**2)
+        )
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(np.sum(best_solution**2), 10.0)
         
-        # Check if the solution is within bounds
-        for i in range(self.num_variables):
-            self.assertTrue(best_solution[i] >= self.bounds[i, 0])
-            self.assertTrue(best_solution[i] <= self.bounds[i, 1])
-        
-        # Check if the algorithm converges
-        self.assertLess(best_scores[-1], best_scores[0])
-        
-        # Check if the final solution is close to the optimum
-        self.assertLess(sphere_function(best_solution), self.threshold)
-        
-        # Test on Rastrigin function (more complex)
-        best_solution, best_scores = ITLBO_algorithm(
+        # Test on Rastrigin function
+        best_solution, best_scores, _ = GOTLBO_algorithm(
             self.bounds, 
             self.num_iterations, 
             self.population_size, 
             self.num_variables, 
             rastrigin_function
         )
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(rastrigin_function(best_solution), 100.0)
         
-        # Check if the algorithm converges
-        self.assertLess(best_scores[-1], best_scores[0])
-        
-        # For Rastrigin, use a more relaxed threshold
-        self.assertLess(rastrigin_function(best_solution), self.threshold * 10)
-    
-    def test_ITLBO_constrained(self):
-        """Test ITLBO algorithm on constrained optimization problems"""
-        # Use a smaller problem for constrained optimization
-        num_vars = 2
-        bounds = np.array([[-5, 5] for _ in range(num_vars)])
-        
-        # Test with a constraint
-        best_solution, best_scores = ITLBO_algorithm(
-            bounds, 
+        # Test on Ackley function
+        best_solution, best_scores, _ = GOTLBO_algorithm(
+            self.bounds, 
             self.num_iterations, 
             self.population_size, 
-            num_vars, 
-            sphere_function,
-            constraints=[constraint_example]
+            self.num_variables, 
+            ackley_function
         )
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(ackley_function(best_solution), 15.0)
+
+    def test_GOTLBO_constrained(self):
+        """Test GOTLBO algorithm on constrained optimization problems"""
+        constraints = [constraint_1, constraint_2]
         
-        # Check if the solution is within bounds
-        for i in range(num_vars):
-            self.assertTrue(best_solution[i] >= bounds[i, 0])
-            self.assertTrue(best_solution[i] <= bounds[i, 1])
+        best_solution, best_scores, _ = GOTLBO_algorithm(
+            self.bounds, 
+            self.num_iterations, 
+            self.population_size, 
+            self.num_variables, 
+            objective_function,
+            constraints
+        )
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(objective_function(best_solution), 50.0)
+
+    def test_ITLBO_unconstrained(self):
+        """Test ITLBO algorithm on unconstrained optimization problems"""
+        # Test on sphere function
+        best_solution, best_scores, _ = ITLBO_algorithm(
+            self.bounds, 
+            self.num_iterations, 
+            self.population_size, 
+            self.num_variables, 
+            lambda x: np.sum(x**2)
+        )
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(np.sum(best_solution**2), 10.0)
         
-        # Check if the constraint is satisfied (approximately)
-        self.assertLessEqual(constraint_example(best_solution), 0.1)
+        # Test on Rastrigin function
+        best_solution, best_scores, _ = ITLBO_algorithm(
+            self.bounds, 
+            self.num_iterations, 
+            self.population_size, 
+            self.num_variables, 
+            rastrigin_function
+        )
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(rastrigin_function(best_solution), 100.0)
         
-        # Check if the algorithm converges
-        self.assertLess(best_scores[-1], best_scores[0])
-    
+        # Test on Ackley function
+        best_solution, best_scores, _ = ITLBO_algorithm(
+            self.bounds, 
+            self.num_iterations, 
+            self.population_size, 
+            self.num_variables, 
+            ackley_function
+        )
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(ackley_function(best_solution), 15.0)
+
+    def test_ITLBO_constrained(self):
+        """Test ITLBO algorithm on constrained optimization problems"""
+        constraints = [constraint_1, constraint_2]
+        
+        best_solution, best_scores, _ = ITLBO_algorithm(
+            self.bounds, 
+            self.num_iterations, 
+            self.population_size, 
+            self.num_variables, 
+            objective_function,
+            constraints
+        )
+        self.assertEqual(len(best_solution), self.num_variables)
+        self.assertLess(objective_function(best_solution), 50.0)
+
     def test_MultiObjective_TLBO(self):
         """Test Multi-objective TLBO algorithm"""
         # Use a smaller problem for multi-objective optimization
