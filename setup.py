@@ -8,7 +8,7 @@ def read_file(filename):
 
 setup(
     name='rao_algorithms',
-    version='0.5.1',
+    version='0.6.1',
     author='Sandeep Kunkunuru',
     author_email='sandeep.kunkunuru@gmail.com',
     description='Optimization algorithms by Prof. R.V. Rao with constraint handling',
