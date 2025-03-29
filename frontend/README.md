@@ -2,6 +2,10 @@
 
 An interactive web application for visualizing and exploring optimization algorithms developed by Prof. R.V. Rao.
 
+## Live Demo
+
+**[Visit the live application](https://vaidhyamegha.github.io/optimization_algorithms/)**
+
 ## Overview
 
 This frontend application provides a comprehensive visualization platform for understanding and comparing various optimization algorithms:
@@ -49,27 +53,41 @@ frontend/
 
 ### Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/VaidhyaMegha/optimization_algorithms.git
-   cd optimization_algorithms/frontend
-   ```
+```bash
+# Clone the repository
+git clone https://github.com/VaidhyaMegha/optimization_algorithms.git
 
-2. Install dependencies:
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
+# Navigate to the frontend directory
+cd optimization_algorithms/frontend
 
-3. Start the development server:
-   ```bash
-   npm start
-   # or
-   yarn start
-   ```
+# Install dependencies
+npm install
 
-4. Open [http://localhost:3000](http://localhost:3000) to view the application in your browser.
+# Start the development server
+npm start
+```
+
+The application will be available at `http://localhost:3000`.
+
+## Deployment
+
+The application is deployed on GitHub Pages. To update the deployment:
+
+```bash
+# Build and deploy the application
+npm run deploy
+```
+
+This will:
+1. Build an optimized production version of the app
+2. Deploy it to the `gh-pages` branch of the repository
+3. Make it available at https://vaidhyamegha.github.io/optimization_algorithms/
+
+### Notes on Deployment
+
+- The application uses HashRouter for proper routing on GitHub Pages
+- All routes are accessible via hash-based URLs (e.g., `/#/algorithm/bmr`)
+- Any changes pushed to the main branch will not automatically update the live site; you must run `npm run deploy`
 
 ## Usage
 

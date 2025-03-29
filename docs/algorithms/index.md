@@ -2,6 +2,11 @@
 
 This section provides detailed documentation for all the optimization algorithms implemented in this package.
 
+## Interactive Visualization
+
+Explore and compare these algorithms through our interactive web application:
+**[Rao Optimization Algorithms Visualizer](https://vaidhyamegha.github.io/optimization_algorithms/)**
+
 ## Available Algorithms
 
 - [BMR (Best-Mean-Random) Algorithm](bmr.md): A simple yet effective algorithm that uses the best solution, mean solution, and a random solution to guide the search process.

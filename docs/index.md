@@ -2,6 +2,11 @@
 
 Welcome to the comprehensive documentation for the BMR and BWR optimization algorithms package.
 
+## Interactive Visualization
+
+Explore these algorithms through our interactive web application:
+**[Rao Optimization Algorithms Visualizer](https://vaidhyamegha.github.io/optimization_algorithms/)**
+
 ## Contents
 
 1. [Introduction](introduction.md)

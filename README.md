@@ -15,6 +15,11 @@ These algorithms are designed to solve both **constrained** and **unconstrained*
 
 **Ravipudi Venkata Rao and Ravikumar Shah (2024)**, "BMR and BWR: Two simple metaphor-free optimization algorithms for solving real-life non-convex constrained and unconstrained problems." [arXiv:2407.11149v2](https://arxiv.org/abs/2407.11149).
 
+## Interactive Visualization
+
+Explore these algorithms through our interactive web application:
+**[Rao Optimization Algorithms Visualizer](https://vaidhyamegha.github.io/optimization_algorithms/)**
+
 ## Features
 
 - **Metaphor-Free**: No reliance on nature-inspired metaphors.
