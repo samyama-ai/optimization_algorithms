@@ -10,6 +10,9 @@ COPY . .
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Install the package in development mode before running tests
+RUN pip install -e .
+
 # Install pytest for running tests
 RUN pip install pytest
 
