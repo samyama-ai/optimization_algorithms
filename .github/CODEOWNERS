@@ -1,0 +1,15 @@
+# Default owners for everything in the repo
+* @MandarapuMadhulatha @sandeepkunkunuru @vinod-dega
+
+# Frontend code ownership
+/frontend/ @MandarapuMadhulatha @sandeepkunkunuru
+
+# Python implementation ownership
+*.py @MandarapuMadhulatha @sandeepkunkunuru
+
+# Documentation ownership
+/docs/ @MandarapuMadhulatha @sandeepkunkunuru
+*.md @MandarapuMadhulatha @sandeepkunkunuru
+
+# GitHub specific files
+.github/ @vinod-dega
