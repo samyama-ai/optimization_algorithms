@@ -25,5 +25,6 @@ classifiers = [
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-module-name = "samyama_optimization" # This will be the import name for the Rust extension
+module-name = "samyama_optimization"
 manifest-path = "rust_bindings/Cargo.toml"
+python-source = "."
