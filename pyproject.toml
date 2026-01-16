@@ -25,6 +25,6 @@ classifiers = [
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-module-name = "samyama_optimization"
+module-name = "rao_algorithms.samyama_optimization"
 manifest-path = "rust_bindings/Cargo.toml"
 python-source = "."
