@@ -2,7 +2,7 @@ use pyo3::prelude::*;
 use pyo3::types::PyFunction;
 use ndarray::Array1;
 use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1};
-use ::samyama_optimization::algorithms::{JayaSolver, RaoSolver, RaoVariant, TLBOSolver, BMRSolver, BWRSolver};
+use ::samyama_optimization::algorithms::{JayaSolver, RaoSolver, RaoVariant, TLBOSolver, BMRSolver, BWRSolver, QOJayaSolver, ITLBOSolver};
 use ::samyama_optimization::common::{Problem, SolverConfig};
 
 /// Wrapper to use a Python function as a Rust Problem
@@ -159,14 +159,60 @@ fn solve_bwr(
     })
 }
 
+#[pyfunction]
+#[pyo3(signature = (objective, lower, upper, population_size=50, max_iterations=100))]
+fn solve_qojaya(
+    py: Python,
+    objective: Py<PyFunction>,
+    lower: PyReadonlyArray1<f64>,
+    upper: PyReadonlyArray1<f64>,
+    population_size: usize,
+    max_iterations: usize,
+) -> PyResult<PyOptimizationResult> {
+    let lower_arr = lower.as_array().to_owned();
+    let upper_arr = upper.as_array().to_owned();
+    let problem = PyProblem { objective, dim: lower_arr.len(), lower: lower_arr, upper: upper_arr };
+    let solver = QOJayaSolver::new(SolverConfig { population_size, max_iterations });
+    let result = solver.solve(&problem);
+    Ok(PyOptimizationResult {
+        best_variables: result.best_variables.into_pyarray(py).to_owned(),
+        best_fitness: result.best_fitness,
+        history: result.history,
+    })
+}
+
+#[pyfunction]
+#[pyo3(signature = (objective, lower, upper, population_size=50, max_iterations=100))]
+fn solve_itlbo(
+    py: Python,
+    objective: Py<PyFunction>,
+    lower: PyReadonlyArray1<f64>,
+    upper: PyReadonlyArray1<f64>,
+    population_size: usize,
+    max_iterations: usize,
+) -> PyResult<PyOptimizationResult> {
+    let lower_arr = lower.as_array().to_owned();
+    let upper_arr = upper.as_array().to_owned();
+    let problem = PyProblem { objective, dim: lower_arr.len(), lower: lower_arr, upper: upper_arr };
+    let solver = ITLBOSolver::new(SolverConfig { population_size, max_iterations });
+    let result = solver.solve(&problem);
+    Ok(PyOptimizationResult {
+        best_variables: result.best_variables.into_pyarray(py).to_owned(),
+        best_fitness: result.best_fitness,
+        history: result.history,
+    })
+}
+
 #[pymodule]
-fn samyama_optimization(py: Python, m: &PyModule) -> PyResult<()> {
+fn samyama_optimization(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyOptimizationResult>()?;
     m.add_function(wrap_pyfunction!(solve_jaya, m)?)?;
     m.add_function(wrap_pyfunction!(solve_rao, m)?)?;
     m.add_function(wrap_pyfunction!(solve_tlbo, m)?)?;
     m.add_function(wrap_pyfunction!(solve_bmr, m)?)?;
     m.add_function(wrap_pyfunction!(solve_bwr, m)?)?;
+    m.add_function(wrap_pyfunction!(solve_qojaya, m)?)?;
+    m.add_function(wrap_pyfunction!(solve_itlbo, m)?)?;
     m.add_function(wrap_pyfunction!(status, m)?)?;
     Ok(())
 }
