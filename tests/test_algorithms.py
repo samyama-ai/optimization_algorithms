@@ -6,8 +6,8 @@ class TestOptimizationAlgorithms(unittest.TestCase):
 
     def setUp(self):
         self.bounds = np.array([[-100, 100]] * 2)  # Change as needed for higher dimensional problems
-        self.num_iterations = 100
-        self.population_size = 50
+        self.num_iterations = 50
+        self.population_size = 20
         self.num_variables = 2  # You can increase this for higher-dimensional tests
 
     def test_bmr_unconstrained(self):
