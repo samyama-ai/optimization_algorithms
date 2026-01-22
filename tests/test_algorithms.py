@@ -1,14 +1,15 @@
 import unittest
 import numpy as np
 from rao_algorithms import BMR_algorithm, BWR_algorithm, run_optimization, objective_function, rastrigin_function, ackley_function, rosenbrock_function, constraint_1, constraint_2
+from tests.test_config import NUM_ITERATIONS, POPULATION_SIZE, NUM_VARIABLES, BOUNDS_RANGE
 
 class TestOptimizationAlgorithms(unittest.TestCase):
 
     def setUp(self):
-        self.bounds = np.array([[-100, 100]] * 2)  # Change as needed for higher dimensional problems
-        self.num_iterations = 100
-        self.population_size = 50
-        self.num_variables = 2  # You can increase this for higher-dimensional tests
+        self.bounds = np.array([[-BOUNDS_RANGE, BOUNDS_RANGE]] * NUM_VARIABLES)
+        self.num_iterations = NUM_ITERATIONS
+        self.population_size = POPULATION_SIZE
+        self.num_variables = NUM_VARIABLES
 
     def test_bmr_unconstrained(self):
         best_solution, _, _ = BMR_algorithm(self.bounds, self.num_iterations, self.population_size, self.num_variables, objective_function)

@@ -15,6 +15,7 @@ from rao_algorithms import (
     ITLBO_algorithm,
     MultiObjective_TLBO_algorithm
 )
+from tests.test_config import NUM_ITERATIONS, POPULATION_SIZE, NUM_VARIABLES
 
 # Test functions
 def sphere_function(x):
@@ -45,9 +46,9 @@ class TestConvergenceHistory(unittest.TestCase):
     
     def setUp(self):
         # Common parameters for all tests
-        self.population_size = 20
-        self.num_iterations = 50  # Reduced for faster testing
-        self.num_variables = 2
+        self.population_size = POPULATION_SIZE
+        self.num_iterations = NUM_ITERATIONS
+        self.num_variables = NUM_VARIABLES
         self.bounds = np.array([[-5, 5] for _ in range(self.num_variables)])
     
     def verify_convergence_history(self, history, algorithm_name):
@@ -206,7 +207,7 @@ class TestConvergenceHistory(unittest.TestCase):
         self.verify_convergence_history(history, "QOJAYA")
         
         # Check QOJAYA-specific fields
-        self.assertIn('opposition_improvements', history)
+        self.assertIn('opposition_phase_improvements', history)
     
     def test_JCRO_history(self):
         """Test JCRO algorithm convergence history"""
