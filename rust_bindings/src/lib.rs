@@ -54,7 +54,7 @@ fn solve_jaya(
     let upper_arr = upper.as_array().to_owned();
     let problem = PyProblem { objective, dim: lower_arr.len(), lower: lower_arr, upper: upper_arr };
     let solver = JayaSolver::new(SolverConfig { population_size, max_iterations });
-    let result = solver.solve(&problem);
+    let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
         best_variables: result.best_variables.into_pyarray(py).to_owned(),
         best_fitness: result.best_fitness,
@@ -85,7 +85,7 @@ fn solve_rao(
     };
 
     let solver = RaoSolver::new(SolverConfig { population_size, max_iterations }, rao_variant);
-    let result = solver.solve(&problem);
+    let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
         best_variables: result.best_variables.into_pyarray(py).to_owned(),
         best_fitness: result.best_fitness,
@@ -107,7 +107,7 @@ fn solve_tlbo(
     let upper_arr = upper.as_array().to_owned();
     let problem = PyProblem { objective, dim: lower_arr.len(), lower: lower_arr, upper: upper_arr };
     let solver = TLBOSolver::new(SolverConfig { population_size, max_iterations });
-    let result = solver.solve(&problem);
+    let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
         best_variables: result.best_variables.into_pyarray(py).to_owned(),
         best_fitness: result.best_fitness,
@@ -129,7 +129,7 @@ fn solve_bmr(
     let upper_arr = upper.as_array().to_owned();
     let problem = PyProblem { objective, dim: lower_arr.len(), lower: lower_arr, upper: upper_arr };
     let solver = BMRSolver::new(SolverConfig { population_size, max_iterations });
-    let result = solver.solve(&problem);
+    let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
         best_variables: result.best_variables.into_pyarray(py).to_owned(),
         best_fitness: result.best_fitness,
@@ -151,7 +151,7 @@ fn solve_bwr(
     let upper_arr = upper.as_array().to_owned();
     let problem = PyProblem { objective, dim: lower_arr.len(), lower: lower_arr, upper: upper_arr };
     let solver = BWRSolver::new(SolverConfig { population_size, max_iterations });
-    let result = solver.solve(&problem);
+    let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
         best_variables: result.best_variables.into_pyarray(py).to_owned(),
         best_fitness: result.best_fitness,
@@ -173,7 +173,7 @@ fn solve_qojaya(
     let upper_arr = upper.as_array().to_owned();
     let problem = PyProblem { objective, dim: lower_arr.len(), lower: lower_arr, upper: upper_arr };
     let solver = QOJayaSolver::new(SolverConfig { population_size, max_iterations });
-    let result = solver.solve(&problem);
+    let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
         best_variables: result.best_variables.into_pyarray(py).to_owned(),
         best_fitness: result.best_fitness,
@@ -195,7 +195,7 @@ fn solve_itlbo(
     let upper_arr = upper.as_array().to_owned();
     let problem = PyProblem { objective, dim: lower_arr.len(), lower: lower_arr, upper: upper_arr };
     let solver = ITLBOSolver::new(SolverConfig { population_size, max_iterations });
-    let result = solver.solve(&problem);
+    let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
         best_variables: result.best_variables.into_pyarray(py).to_owned(),
         best_fitness: result.best_fitness,
