@@ -11,7 +11,7 @@ except ImportError:
     except ImportError:
         RUST_AVAILABLE = False
 
-def _run_rust_solver(solver_func, bounds, num_iterations, population_size, objective_func, constraints=None, variant=None):
+def _run_rust_solver(solver_func, bounds, num_iterations, population_size, objective_func, constraints=None, variant=None, track_history=True):
     if constraints:
         def penalized_objective(x):
             return constrained_objective_function(x, objective_func, constraints)
@@ -42,54 +42,57 @@ def _run_rust_solver(solver_func, bounds, num_iterations, population_size, objec
         'teacher_phase_improvements': [0]*len(result.history),
         'learner_phase_improvements': [0]*len(result.history),
     }
-        
-    return result.best_variables, result.history, history_dict
+    
+    if track_history:
+        return result.best_variables, result.history, history_dict
+    else:
+        return result.best_variables, result.history
 
 # --- Algorithms ---
 
 def BMR_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     if RUST_AVAILABLE:
-        return _run_rust_solver(rust_opt.solve_bmr, bounds, num_iterations, population_size, objective_func, constraints)
+        return _run_rust_solver(rust_opt.solve_bmr, bounds, num_iterations, population_size, objective_func, constraints, track_history=track_history)
     raise NotImplementedError("Rust backend required")
 
 def BWR_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     if RUST_AVAILABLE:
-        return _run_rust_solver(rust_opt.solve_bwr, bounds, num_iterations, population_size, objective_func, constraints)
+        return _run_rust_solver(rust_opt.solve_bwr, bounds, num_iterations, population_size, objective_func, constraints, track_history=track_history)
     raise NotImplementedError("Rust backend required")
 
 def Jaya_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     if RUST_AVAILABLE:
-        return _run_rust_solver(rust_opt.solve_jaya, bounds, num_iterations, population_size, objective_func, constraints)
+        return _run_rust_solver(rust_opt.solve_jaya, bounds, num_iterations, population_size, objective_func, constraints, track_history=track_history)
     raise NotImplementedError("Rust backend required")
 
 def Rao1_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     if RUST_AVAILABLE:
-        return _run_rust_solver(rust_opt.solve_rao, bounds, num_iterations, population_size, objective_func, constraints, variant="Rao1")
+        return _run_rust_solver(rust_opt.solve_rao, bounds, num_iterations, population_size, objective_func, constraints, variant="Rao1", track_history=track_history)
     raise NotImplementedError("Rust backend required")
 
 def Rao2_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     if RUST_AVAILABLE:
-        return _run_rust_solver(rust_opt.solve_rao, bounds, num_iterations, population_size, objective_func, constraints, variant="Rao2")
+        return _run_rust_solver(rust_opt.solve_rao, bounds, num_iterations, population_size, objective_func, constraints, variant="Rao2", track_history=track_history)
     raise NotImplementedError("Rust backend required")
 
 def Rao3_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     if RUST_AVAILABLE:
-        return _run_rust_solver(rust_opt.solve_rao, bounds, num_iterations, population_size, objective_func, constraints, variant="Rao3")
+        return _run_rust_solver(rust_opt.solve_rao, bounds, num_iterations, population_size, objective_func, constraints, variant="Rao3", track_history=track_history)
     raise NotImplementedError("Rust backend required")
 
 def TLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     if RUST_AVAILABLE:
-        return _run_rust_solver(rust_opt.solve_tlbo, bounds, num_iterations, population_size, objective_func, constraints)
+        return _run_rust_solver(rust_opt.solve_tlbo, bounds, num_iterations, population_size, objective_func, constraints, track_history=track_history)
     raise NotImplementedError("Rust backend required")
 
 def QOJAYA_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     if RUST_AVAILABLE:
-        return _run_rust_solver(rust_opt.solve_qojaya, bounds, num_iterations, population_size, objective_func, constraints)
+        return _run_rust_solver(rust_opt.solve_qojaya, bounds, num_iterations, population_size, objective_func, constraints, track_history=track_history)
     raise NotImplementedError("Rust backend required")
 
 def ITLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     if RUST_AVAILABLE:
-        return _run_rust_solver(rust_opt.solve_itlbo, bounds, num_iterations, population_size, objective_func, constraints)
+        return _run_rust_solver(rust_opt.solve_itlbo, bounds, num_iterations, population_size, objective_func, constraints, track_history=track_history)
     raise NotImplementedError("Rust backend required")
 
 # Aliases

@@ -13,14 +13,15 @@ from rao_algorithms import (
     constraint_1, 
     constraint_2
 )
+from tests.test_config import NUM_ITERATIONS, POPULATION_SIZE, NUM_VARIABLES, BOUNDS_RANGE, ASSERTION_THRESHOLD_RASTRIGIN
 
 class TestAdditionalAlgorithms(unittest.TestCase):
 
     def setUp(self):
-        self.bounds = np.array([[-100, 100]] * 2)  # 2D problem bounds
-        self.num_iterations = 50  # Reduced for faster CI
-        self.population_size = 20
-        self.num_variables = 2
+        self.bounds = np.array([[-BOUNDS_RANGE, BOUNDS_RANGE]] * NUM_VARIABLES)
+        self.num_iterations = NUM_ITERATIONS
+        self.population_size = POPULATION_SIZE
+        self.num_variables = NUM_VARIABLES
 
     def test_jaya_unconstrained(self):
         best_solution, _, _ = Jaya_algorithm(
@@ -57,7 +58,7 @@ class TestAdditionalAlgorithms(unittest.TestCase):
         )
         self.assertEqual(len(best_solution), self.num_variables)
         # Further relaxed threshold for stochastic behavior
-        self.assertLess(objective_function(best_solution), 500.0)
+        self.assertLess(objective_function(best_solution), ASSERTION_THRESHOLD_RASTRIGIN)
 
     def test_rao2_unconstrained(self):
         best_solution, _, _ = Rao2_algorithm(
@@ -80,7 +81,7 @@ class TestAdditionalAlgorithms(unittest.TestCase):
         )
         self.assertEqual(len(best_solution), self.num_variables)
         # Further relaxed threshold for stochastic behavior
-        self.assertLess(objective_function(best_solution), 500.0)
+        self.assertLess(objective_function(best_solution), ASSERTION_THRESHOLD_RASTRIGIN)
 
     def test_tlbo_unconstrained(self):
         best_solution, _, _ = TLBO_algorithm(
@@ -127,7 +128,7 @@ class TestAdditionalAlgorithms(unittest.TestCase):
             )
             self.assertEqual(len(best_solution), self.num_variables)
             # Further relaxed threshold for Rastrigin function due to its complexity
-            self.assertLess(rastrigin_function(best_solution), 500.0)
+            self.assertLess(rastrigin_function(best_solution), ASSERTION_THRESHOLD_RASTRIGIN)
 
     def test_algorithms_on_ackley(self):
         """Test all algorithms on the Ackley function."""

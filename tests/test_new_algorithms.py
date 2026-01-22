@@ -51,17 +51,19 @@ def objective_function(x):
     return np.sum(x**2)
 
 
+from tests.test_config import NUM_ITERATIONS, POPULATION_SIZE, ASSERTION_THRESHOLD_RASTRIGIN
+
 class TestNewAlgorithms(unittest.TestCase):
     
     def setUp(self):
         # Common parameters for all tests
-        self.population_size = 20
-        self.num_iterations = 50
+        self.population_size = POPULATION_SIZE
+        self.num_iterations = NUM_ITERATIONS
         self.num_variables = 5
         self.bounds = np.array([[-5, 5] for _ in range(self.num_variables)])
         
         # Set a relaxed threshold for stochastic algorithms
-        self.threshold = 500.0  # Relaxed threshold for stochastic algorithms
+        self.threshold = ASSERTION_THRESHOLD_RASTRIGIN
         
     def test_QOJAYA_unconstrained(self):
         """Test QOJAYA algorithm on unconstrained optimization problems"""
