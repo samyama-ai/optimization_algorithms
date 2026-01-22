@@ -12,6 +12,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.20", features = ["extension-module"] }
-samyama-optimization = "0.2.0"
+samyama-optimization = { git = "https://github.com/samyama-ai/samyama-graph.git", branch = "main" }
 ndarray = "0.15"
 numpy = "0.20"
