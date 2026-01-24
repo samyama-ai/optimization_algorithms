@@ -384,7 +384,6 @@ checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
 [[package]]
 name = "samyama-optimization"
 version = "0.3.1"
-source = "git+https://github.com/samyama-ai/samyama-graph.git?branch=main#7b933177d7cabe65467bafe605fc65cdc049fc45"
 dependencies = [
  "anyhow",
  "ndarray",
