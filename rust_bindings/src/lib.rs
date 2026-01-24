@@ -18,8 +18,8 @@ impl Problem for PyProblem {
         Python::with_gil(|py| {
             let py_vars = variables.to_owned().into_pyarray(py);
             let args = (py_vars,);
-            let result = self.objective.as_ref(py).call1(args).expect("Python objective function failed");
-            result.extract::<f64>().expect("Objective must return a float")
+            let result = self.objective.call1(py, args).expect("Python objective function failed");
+            result.extract::<f64>(py).expect("Objective must return a float")
         })
     }
 
@@ -56,7 +56,7 @@ fn solve_jaya(
     let solver = JayaSolver::new(SolverConfig { population_size, max_iterations });
     let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
-        best_variables: result.best_variables.into_pyarray(py).to_owned(),
+        best_variables: result.best_variables.into_pyarray(py).to_owned().into(),
         best_fitness: result.best_fitness,
         history: result.history,
     })
@@ -87,7 +87,7 @@ fn solve_rao(
     let solver = RaoSolver::new(SolverConfig { population_size, max_iterations }, rao_variant);
     let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
-        best_variables: result.best_variables.into_pyarray(py).to_owned(),
+        best_variables: result.best_variables.into_pyarray(py).to_owned().into(),
         best_fitness: result.best_fitness,
         history: result.history,
     })
@@ -109,7 +109,7 @@ fn solve_tlbo(
     let solver = TLBOSolver::new(SolverConfig { population_size, max_iterations });
     let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
-        best_variables: result.best_variables.into_pyarray(py).to_owned(),
+        best_variables: result.best_variables.into_pyarray(py).to_owned().into(),
         best_fitness: result.best_fitness,
         history: result.history,
     })
@@ -131,7 +131,7 @@ fn solve_bmr(
     let solver = BMRSolver::new(SolverConfig { population_size, max_iterations });
     let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
-        best_variables: result.best_variables.into_pyarray(py).to_owned(),
+        best_variables: result.best_variables.into_pyarray(py).to_owned().into(),
         best_fitness: result.best_fitness,
         history: result.history,
     })
@@ -153,7 +153,7 @@ fn solve_bwr(
     let solver = BWRSolver::new(SolverConfig { population_size, max_iterations });
     let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
-        best_variables: result.best_variables.into_pyarray(py).to_owned(),
+        best_variables: result.best_variables.into_pyarray(py).to_owned().into(),
         best_fitness: result.best_fitness,
         history: result.history,
     })
@@ -175,7 +175,7 @@ fn solve_qojaya(
     let solver = QOJayaSolver::new(SolverConfig { population_size, max_iterations });
     let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
-        best_variables: result.best_variables.into_pyarray(py).to_owned(),
+        best_variables: result.best_variables.into_pyarray(py).to_owned().into(),
         best_fitness: result.best_fitness,
         history: result.history,
     })
@@ -197,7 +197,7 @@ fn solve_itlbo(
     let solver = ITLBOSolver::new(SolverConfig { population_size, max_iterations });
     let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
-        best_variables: result.best_variables.into_pyarray(py).to_owned(),
+        best_variables: result.best_variables.into_pyarray(py).to_owned().into(),
         best_fitness: result.best_fitness,
         history: result.history,
     })
@@ -219,7 +219,7 @@ fn solve_gotlbo(
     let solver = GOTLBOSolver::new(SolverConfig { population_size, max_iterations });
     let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
-        best_variables: result.best_variables.into_pyarray(py).to_owned(),
+        best_variables: result.best_variables.into_pyarray(py).to_owned().into(),
         best_fitness: result.best_fitness,
         history: result.history,
     })
@@ -241,7 +241,7 @@ fn solve_pso(
     let solver = PSOSolver::new(SolverConfig { population_size, max_iterations });
     let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
-        best_variables: result.best_variables.into_pyarray(py).to_owned(),
+        best_variables: result.best_variables.into_pyarray(py).to_owned().into(),
         best_fitness: result.best_fitness,
         history: result.history,
     })
@@ -263,14 +263,19 @@ fn solve_de(
     let solver = DESolver::new(SolverConfig { population_size, max_iterations });
     let result = py.allow_threads(|| solver.solve(&problem));
     Ok(PyOptimizationResult {
-        best_variables: result.best_variables.into_pyarray(py).to_owned(),
+        best_variables: result.best_variables.into_pyarray(py).to_owned().into(),
         best_fitness: result.best_fitness,
         history: result.history,
     })
 }
 
+#[pyfunction]
+fn status() -> PyResult<String> {
+    Ok("Samyama Optimization Engine (Rust) is active".to_string())
+}
+
 #[pymodule]
-fn samyama_optimization(_py: Python, m: &PyModule) -> PyResult<()> {
+fn samyama_optimization(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyOptimizationResult>()?;
     m.add_function(wrap_pyfunction!(solve_jaya, m)?)?;
     m.add_function(wrap_pyfunction!(solve_rao, m)?)?;
@@ -284,9 +289,4 @@ fn samyama_optimization(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(solve_de, m)?)?;
     m.add_function(wrap_pyfunction!(status, m)?)?;
     Ok(())
-}
-
-#[pyfunction]
-fn status() -> PyResult<String> {
-    Ok("Samyama Optimization Engine (Rust) is active".to_string())
 }

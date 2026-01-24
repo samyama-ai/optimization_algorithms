@@ -1,6 +1,6 @@
 [package]
 name = "samyama-optimization-python"
-version = "0.9.0"
+version = "0.9.1"
 edition = "2021"
 authors = ["Sandeep Kunkunuru <sandeep@samyama.ai>"]
 description = "Python bindings for Samyama Optimization Engine"
@@ -11,7 +11,7 @@ name = "samyama_optimization"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.20", features = ["extension-module"] }
+pyo3 = { version = "0.23", features = ["extension-module"] }
 samyama-optimization = { git = "https://github.com/samyama-ai/samyama-graph.git", branch = "main" }
 ndarray = "0.15"
-numpy = "0.20"
+numpy = "0.23"
