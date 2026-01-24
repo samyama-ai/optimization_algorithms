@@ -125,3 +125,13 @@ def MultiObjective_TLBO_algorithm(bounds, num_iterations, population_size, num_v
         return pareto_front, pareto_fitness, history
     else:
         return pareto_front, pareto_fitness
+
+def PSO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
+    if RUST_AVAILABLE:
+        return _run_rust_solver(rust_opt.solve_pso, bounds, num_iterations, population_size, objective_func, constraints, track_history=track_history)
+    raise NotImplementedError("Rust backend required")
+
+def DE_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
+    if RUST_AVAILABLE:
+        return _run_rust_solver(rust_opt.solve_de, bounds, num_iterations, population_size, objective_func, constraints, track_history=track_history)
+    raise NotImplementedError("Rust backend required")

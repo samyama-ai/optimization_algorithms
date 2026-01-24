@@ -9,3 +9,5 @@ results/
 .pypirc
 example.py
 venv/
+target/
+rust_bindings/target/

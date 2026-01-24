@@ -11,7 +11,9 @@ from .algorithms import (
     JCRO_algorithm,
     GOTLBO_algorithm,
     ITLBO_algorithm,
-    MultiObjective_TLBO_algorithm
+    MultiObjective_TLBO_algorithm,
+    PSO_algorithm,
+    DE_algorithm
 )
 from .optimization import run_optimization, save_convergence_curve, save_convergence_history
 from .objective_functions import (
@@ -41,6 +43,8 @@ __all__ = [
     'GOTLBO_algorithm',
     'ITLBO_algorithm',
     'MultiObjective_TLBO_algorithm',
+    'PSO_algorithm',
+    'DE_algorithm',
     'run_optimization',
     'save_convergence_curve',
     'save_convergence_history',

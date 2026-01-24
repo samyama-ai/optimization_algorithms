@@ -2,7 +2,7 @@ use pyo3::prelude::*;
 use pyo3::types::PyFunction;
 use ndarray::Array1;
 use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1};
-use ::samyama_optimization::algorithms::{JayaSolver, RaoSolver, RaoVariant, TLBOSolver, BMRSolver, BWRSolver, QOJayaSolver, ITLBOSolver};
+use ::samyama_optimization::algorithms::{JayaSolver, RaoSolver, RaoVariant, TLBOSolver, BMRSolver, BWRSolver, QOJayaSolver, ITLBOSolver, PSOSolver, DESolver};
 use ::samyama_optimization::common::{Problem, SolverConfig};
 
 /// Wrapper to use a Python function as a Rust Problem
@@ -203,6 +203,50 @@ fn solve_itlbo(
     })
 }
 
+#[pyfunction]
+#[pyo3(signature = (objective, lower, upper, population_size=50, max_iterations=100))]
+fn solve_pso(
+    py: Python,
+    objective: Py<PyFunction>,
+    lower: PyReadonlyArray1<f64>,
+    upper: PyReadonlyArray1<f64>,
+    population_size: usize,
+    max_iterations: usize,
+) -> PyResult<PyOptimizationResult> {
+    let lower_arr = lower.as_array().to_owned();
+    let upper_arr = upper.as_array().to_owned();
+    let problem = PyProblem { objective, dim: lower_arr.len(), lower: lower_arr, upper: upper_arr };
+    let solver = PSOSolver::new(SolverConfig { population_size, max_iterations });
+    let result = py.allow_threads(|| solver.solve(&problem));
+    Ok(PyOptimizationResult {
+        best_variables: result.best_variables.into_pyarray(py).to_owned(),
+        best_fitness: result.best_fitness,
+        history: result.history,
+    })
+}
+
+#[pyfunction]
+#[pyo3(signature = (objective, lower, upper, population_size=50, max_iterations=100))]
+fn solve_de(
+    py: Python,
+    objective: Py<PyFunction>,
+    lower: PyReadonlyArray1<f64>,
+    upper: PyReadonlyArray1<f64>,
+    population_size: usize,
+    max_iterations: usize,
+) -> PyResult<PyOptimizationResult> {
+    let lower_arr = lower.as_array().to_owned();
+    let upper_arr = upper.as_array().to_owned();
+    let problem = PyProblem { objective, dim: lower_arr.len(), lower: lower_arr, upper: upper_arr };
+    let solver = DESolver::new(SolverConfig { population_size, max_iterations });
+    let result = py.allow_threads(|| solver.solve(&problem));
+    Ok(PyOptimizationResult {
+        best_variables: result.best_variables.into_pyarray(py).to_owned(),
+        best_fitness: result.best_fitness,
+        history: result.history,
+    })
+}
+
 #[pymodule]
 fn samyama_optimization(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyOptimizationResult>()?;
@@ -213,6 +257,8 @@ fn samyama_optimization(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(solve_bwr, m)?)?;
     m.add_function(wrap_pyfunction!(solve_qojaya, m)?)?;
     m.add_function(wrap_pyfunction!(solve_itlbo, m)?)?;
+    m.add_function(wrap_pyfunction!(solve_pso, m)?)?;
+    m.add_function(wrap_pyfunction!(solve_de, m)?)?;
     m.add_function(wrap_pyfunction!(status, m)?)?;
     Ok(())
 }
