@@ -15,7 +15,7 @@ The algorithm updates the position of each candidate solution based on three key
 
 For a candidate solution $X_i$ at iteration $t$, the new position $X'_{i}$ is calculated as:
 
-$$X'_{i,j} = X_{i,j} + r_1  (X_{best,j} - T  X_{mean,j}) + r_2  (X_{best,j} - X_{rand,j})$$
+$$X'_{i,j} = X_{i,j} + r_1 \cdot (X_{best,j} - T \cdot X_{mean,j}) + r_2 \cdot (X_{best,j} - X_{rand,j})$$
 
 Where:
 - $X_{i,j}$ is the $j$-th variable of the $i$-th candidate.
@@ -46,8 +46,7 @@ graph TD
 2.  Evaluate the fitness of each solution.
 3.  Identify the **Best** solution and calculate the **Mean** solution.
 4.  For each solution $X_i$:
-    *   Select a random solution $X_{rand}$ from the population ($i 
-eq rand$).
+    *   Select a random solution $X_{rand}$ from the population ($i \neq rand$).
     *   Generate random numbers $r_1, r_2$.
     *   Update $X_i$ using the update equation.
     *   Check bounds and clamp if necessary.
