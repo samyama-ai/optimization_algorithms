@@ -101,8 +101,9 @@ def TLBO_with_Elitism_algorithm(bounds, num_iterations, population_size, num_var
     return ITLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints, track_history)
 
 def GOTLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
-    # Mapping to ITLBO for now as they share elitism traits
-    return ITLBO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints, track_history)
+    if RUST_AVAILABLE:
+        return _run_rust_solver(rust_opt.solve_gotlbo, bounds, num_iterations, population_size, objective_func, constraints, track_history=track_history)
+    raise NotImplementedError("Rust backend required")
 
 def JCRO_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
     # Mapping to QOJAYA as it uses similar oppositional concepts
