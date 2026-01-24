@@ -14,6 +14,19 @@ $$X^{op}_j = a_j + b_j - X_j$$
 Where $[a_j, b_j]$ are the bounds for the $j$-th variable.
 
 ### Workflow Integration
+
+```mermaid
+graph TD
+    A[Start] --> B[Initialize Population]
+    B --> C[Teacher Phase]
+    C --> D[Generate Opposites & Select Better]
+    D --> E[Learner Phase]
+    E --> F[Generate Opposites & Select Better]
+    F --> G{Termination?}
+    G -->|No| C
+    G -->|Yes| H[End]
+```
+
 1.  **Teacher Phase:** perform standard update $\rightarrow$ generate $X^{op}$ $\rightarrow$ select better of ($X$, $X^{op}$).
 2.  **Learner Phase:** perform standard update $\rightarrow$ generate $X^{op}$ $\rightarrow$ select better of ($X$, $X^{op}$).
 

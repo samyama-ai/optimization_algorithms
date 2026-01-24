@@ -15,6 +15,21 @@ This effectively focuses the search on the "promising" side of the center relati
 
 ## Algorithm Steps
 
+### Workflow
+
+```mermaid
+graph TD
+    A[Start] --> B[Initialize Population]
+    B --> C[Evaluate Fitness]
+    C --> D[Identify Best & Worst]
+    D --> E[Jaya Update Equation]
+    E --> F[Generate Quasi-Opposites]
+    F --> G[Select Better (Update vs Q-Opposite)]
+    G --> H{Termination?}
+    H -->|No| C
+    H -->|Yes| I[End]
+```
+
 1.  **Initialization:** Initialize population $P$.
 2.  **QOBL Initialization (Optional):** Generate quasi-opposites for the initial population and select the best $N$ individuals from the combined pool.
 3.  **Jaya Update:** For each iteration:

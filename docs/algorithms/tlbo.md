@@ -6,6 +6,29 @@ TLBO is a nature-inspired, population-based metaheuristic optimization algorithm
 
 ## Algorithm Phases
 
+### Workflow
+
+```mermaid
+graph TD
+    A[Start] --> B[Initialize Population]
+    B --> C[Teacher Phase]
+    C --> D[Learner Phase]
+    D --> E{Termination?}
+    E -->|No| C
+    E -->|Yes| F[End]
+    
+    subgraph Teacher Phase
+    C1[Calculate Mean] --> C2[Identify Teacher]
+    C2 --> C3[Update Learners based on Teacher]
+    C3 --> C4[Greedy Selection]
+    end
+    
+    subgraph Learner Phase
+    D1[Select Random Peer] --> D2[Interact & Update]
+    D2 --> D3[Greedy Selection]
+    end
+```
+
 ### 1. Teacher Phase
 This phase simulates learning from a teacher. The teacher is the most knowledgeable person in the class (best solution).
 *   **Teacher ($X_{teacher}$):** The best solution in the iteration.

@@ -26,6 +26,21 @@ Our implementation typically follows the standard Rao-style logic of exploiting 
 
 ## Algorithm Steps
 
+### Workflow
+
+```mermaid
+graph TD
+    A[Start] --> B[Initialize Population]
+    B --> C[Evaluate Fitness]
+    C --> D[Identify Best & Worst Solutions]
+    D --> E[Select Random Peer for each Candidate]
+    E --> F[Update using BWR Equation]
+    F --> G[Greedy Selection]
+    G --> H{Termination?}
+    H -->|No| C
+    H -->|Yes| I[End]
+```
+
 1.  Initialize a population.
 2.  Evaluate fitness.
 3.  Identify $X_{best}$ and $X_{worst}$.

@@ -15,11 +15,25 @@ The Rao algorithms are a family of three metaphor-less optimization algorithms d
 
 The Rao-1 algorithm updates solutions based purely on the difference between the best and worst solutions in the population.
 
+### Workflow
+
+```mermaid
+graph TD
+    A[Start] --> B[Initialize Population]
+    B --> C[Evaluate Fitness]
+    C --> D[Identify Best & Worst Solutions]
+    D --> E[Update Candidates using Eq. 1]
+    E --> F[Greedy Selection]
+    F --> G{Termination?}
+    G -->|No| C
+    G -->|Yes| H[End]
+```
+
 ### Mathematical Formulation
 
 For each candidate solution $X_{i}$ in the population at iteration $t$, the new solution $X'_{i}$ is calculated as:
 
-$$X'_{i,j} = X_{i,j} + r_1 \cdot (X_{best,j} - X_{worst,j})$$
+$$X'_{i,j} = X_{i,j} + r_1 · (X_{best,j} - X_{worst,j})$$
 
 Where:
 - $X'_{i,j}$ is the new value of the $j$-th variable for the $i$-th candidate.
@@ -32,15 +46,30 @@ Where:
 
 The Rao-2 algorithm incorporates the best and worst solutions, but also adds a term for random interaction between the candidate solution and another randomly selected solution from the population.
 
+### Workflow
+
+```mermaid
+graph TD
+    A[Start] --> B[Initialize Population]
+    B --> C[Evaluate Fitness]
+    C --> D[Identify Best & Worst Solutions]
+    D --> E[Select Random Peer K for each Candidate]
+    E --> F[Update using Eq. 2 (Interaction)]
+    F --> G[Greedy Selection]
+    G --> H{Termination?}
+    H -->|No| C
+    H -->|Yes| I[End]
+```
+
 ### Mathematical Formulation
 
 For each candidate solution $X_{i}$, randomly select another solution $X_{k}$ (where $i \neq k$).
 
 If $f(X_i) < f(X_k)$ (i.e., $X_i$ is better):
-$$X'_{i,j} = X_{i,j} + r_1 \cdot (X_{best,j} - X_{worst,j}) + r_2 \cdot ( |X_{i,j}| - |X_{k,j}| )$$ 
+$$X'_{i,j} = X_{i,j} + r_1 · (X_{best,j} - X_{worst,j}) + r_2 · ( |X_{i,j}| - |X_{k,j}| )$$
 
 If $f(X_i) \geq f(X_k)$ (i.e., $X_i$ is worse or equal):
-$$X'_{i,j} = X_{i,j} + r_1 \cdot (X_{best,j} - X_{worst,j}) + r_2 \cdot ( |X_{k,j}| - |X_{i,j}| )$$ 
+$$X'_{i,j} = X_{i,j} + r_1 · (X_{best,j} - X_{worst,j}) + r_2 · ( |X_{k,j}| - |X_{i,j}| )$$
 
 Where:
 - $r_1, r_2$ are random numbers between 0 and 1.
@@ -55,10 +84,10 @@ The Rao-3 algorithm is similar to Rao-2 but modifies the interaction term to be 
 For each candidate solution $X_{i}$, randomly select another solution $X_{k}$ (where $i \neq k$).
 
 If $f(X_i) < f(X_k)$ (i.e., $X_i$ is better):
-$$X'_{i,j} = X_{i,j} + r_1 \cdot (X_{best,j} - X_{worst,j}) + r_2 \cdot ( |X_{i,j}| - X_{k,j} )$$ 
+$$X'_{i,j} = X_{i,j} + r_1 · (X_{best,j} - X_{worst,j}) + r_2 · ( |X_{i,j}| - X_{k,j} )$$
 
 If $f(X_i) \geq f(X_k)$ (i.e., $X_i$ is worse or equal):
-$$X'_{i,j} = X_{i,j} + r_1 \cdot (X_{best,j} - X_{worst,j}) + r_2 \cdot ( X_{k,j} - |X_{i,j}| )$$ 
+$$X'_{i,j} = X_{i,j} + r_1 · (X_{best,j} - X_{worst,j}) + r_2 · ( X_{k,j} - |X_{i,j}| )$$
 
 *Note: The difference lies in applying the absolute value to only the "self" term in the interaction difference, allowing the "other" term to retain its sign.*
 

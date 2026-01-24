@@ -12,6 +12,22 @@ Improved Teaching-Learning-Based Optimization (ITLBO) refers to variants of the 
 
 ## Workflow
 
+```mermaid
+graph TD
+    A[Start] --> B[Initialize Population]
+    B --> C[Teacher Phase]
+    C --> D[Learner Phase]
+    D --> E[Elitism Strategy]
+    E --> F{Termination?}
+    F -->|No| C
+    F -->|Yes| G[End]
+    
+    subgraph Elitism Strategy
+    E1[Combine Populations] --> E2[Sort by Fitness]
+    E2 --> E3[Select Top N]
+    end
+```
+
 1.  **Initialization:** Create random population.
 2.  **Teacher Phase:** Standard TLBO teacher phase update.
 3.  **Learner Phase:** Standard TLBO learner phase update.
