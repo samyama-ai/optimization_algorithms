@@ -33,7 +33,7 @@ jobs:
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
-          args: --release --out dist --manifest-path rust_bindings/Cargo.toml
+          args: --release --out dist
           sccache: 'true'
           manylinux: auto
 
