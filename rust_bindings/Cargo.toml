@@ -1,6 +1,6 @@
 [package]
 name = "samyama-optimization-python"
-version = "0.2.0"
+version = "0.9.0"
 edition = "2021"
 authors = ["Sandeep Kunkunuru <sandeep@samyama.ai>"]
 description = "Python bindings for Samyama Optimization Engine"
