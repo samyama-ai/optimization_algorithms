@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use pyo3::types::PyFunction;
 use ndarray::Array1;
-use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1};
+use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1};
 use ::samyama_optimization::algorithms::{JayaSolver, RaoSolver, RaoVariant, TLBOSolver, BMRSolver, BWRSolver, QOJayaSolver, ITLBOSolver, PSOSolver, DESolver, GOTLBOSolver, BMWRSolver, SAMPJayaSolver, EHRJayaSolver, QORaoSolver, MOBMWRSolver, MOBMWRVariant, MORaoDESolver, SAPHRSolver};
 use ::samyama_optimization::common::{MultiObjectiveProblem, Problem, SolverConfig};
 use pyo3::types::PyList;
