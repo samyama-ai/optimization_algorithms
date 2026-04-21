@@ -13,7 +13,11 @@ from .algorithms import (
     ITLBO_algorithm,
     MultiObjective_TLBO_algorithm,
     PSO_algorithm,
-    DE_algorithm
+    DE_algorithm,
+    BMWR_algorithm,
+    SAMP_Jaya_algorithm,
+    EHRJaya_algorithm,
+    QO_Rao_algorithm
 )
 from .optimization import run_optimization, save_convergence_curve, save_convergence_history
 from .objective_functions import (
@@ -45,6 +49,10 @@ __all__ = [
     'MultiObjective_TLBO_algorithm',
     'PSO_algorithm',
     'DE_algorithm',
+    'BMWR_algorithm',
+    'SAMP_Jaya_algorithm',
+    'EHRJaya_algorithm',
+    'QO_Rao_algorithm',
     'run_optimization',
     'save_convergence_curve',
     'save_convergence_history',

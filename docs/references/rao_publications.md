@@ -99,3 +99,18 @@ His algorithms are particularly notable for being:
 Prof. Rao's research has received significant attention in the scientific community. His papers on optimization algorithms have been cited thousands of times, demonstrating the impact and usefulness of his contributions to the field.
 
 For the most up-to-date list of publications and citation metrics, please refer to [Prof. Rao's Google Scholar profile](https://scholar.google.com/citations?user=4NoqGCEAAAAJ).
+
+## 2025–2026 additions (MO family)
+
+- Rao, R. V. (2025). *Optimization of Different Metal Casting Processes Using Three Simple and Efficient Advanced Algorithms*. **MDPI Metals 15(9), 1057.** Introduces **BMWR** (best–mean–worst–random) and the multi-objective **MO-BMR / MO-BWR / MO-BMWR** with case studies on lost-foam, die-, low-pressure, and squeeze-casting. https://www.mdpi.com/2075-4701/15/9/1057
+- Rao, R. V. (2026). **MDPI Energies 19(1), 34.** Multi-objective MO-* application to energy systems. https://www.mdpi.com/1996-1073/19/1/34
+- Rao, R. V. (2025). *Single, Multi-, and Many-Objective Optimization of Manufacturing Processes Using Two Novel and Efficient Algorithms with Integrated Decision-Making*. **MDPI JMMP 9(8), 249.** Contains the MO-* "Algorithm 2" pseudocode (elite seeding + FNDS + constraint repair + local exploration + edge boosting). https://www.mdpi.com/2504-4494/9/8/249
+- Sample Python codes (BWR, BMR, BMWR, MO-BWR, MO-BMR, MO-BMWR): https://sites.google.com/d/1qNsqo0kHkQD9Bhi4-prZlxo5K7QuntgI/p/1OeRlPp5dhwkqfeNvLP4CtHqFhwk74DqB/edit
+
+## Related self-adaptive / hybrid variants implemented
+
+- **SAMP-Jaya** — Rao, R. V., & Saroj, A. (2017). *A self-adaptive multi-population based Jaya algorithm for engineering optimization.* Swarm and Evolutionary Computation 37, 1–26.
+- **SAPHR** — *A Self-Adaptive Population-Based Hybrid Optimisation Technique for Multireservoir Benchmark Problems* (2025). Water Resources Management. doi:10.1007/s11269-025-04186-7
+- **EHR-Jaya** — Wang, Z. et al. (2022). *Self-adaptive classification learning hybrid JAYA and Rao-1 algorithm for large-scale numerical and engineering problems.* Engineering Applications of AI.
+- **QO-Rao** — Rao, R. V., & Saroj, A. (2020). *Quasi-oppositional-based Rao algorithms for multi-objective design optimization of selected heat sinks.* JCDE 7(6), 830.
+- **MO-Rao+DE** — *An efficient multi-objective algorithm based on Rao and differential evolution for solving bi-objective truss optimization* (2025). Engineering Optimization. doi:10.1080/0305215X.2025.2463976

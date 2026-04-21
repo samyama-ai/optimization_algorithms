@@ -136,3 +136,29 @@ def DE_algorithm(bounds, num_iterations, population_size, num_variables, objecti
     if RUST_AVAILABLE:
         return _run_rust_solver(rust_opt.solve_de, bounds, num_iterations, population_size, objective_func, constraints, track_history=track_history)
     raise NotImplementedError("Rust backend required")
+
+# --- New algorithms (Rao 2025 + self-adaptive variants) ---
+
+def BMWR_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
+    """Best-Mean-Worst-Random (Rao 2025, MDPI Metals 15/9/1057). Combines BMR + BWR terms."""
+    if RUST_AVAILABLE:
+        return _run_rust_solver(rust_opt.solve_bmwr, bounds, num_iterations, population_size, objective_func, constraints, track_history=track_history)
+    raise NotImplementedError("Rust backend required")
+
+def SAMP_Jaya_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
+    """Self-Adaptive Multi-Population Jaya (Rao & Saroj 2017)."""
+    if RUST_AVAILABLE:
+        return _run_rust_solver(rust_opt.solve_samp_jaya, bounds, num_iterations, population_size, objective_func, constraints, track_history=track_history)
+    raise NotImplementedError("Rust backend required")
+
+def EHRJaya_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, track_history=True):
+    """Hybrid Jaya + Rao-1 with classification-based update (Wang et al. 2022, EAAI)."""
+    if RUST_AVAILABLE:
+        return _run_rust_solver(rust_opt.solve_ehrjaya, bounds, num_iterations, population_size, objective_func, constraints, track_history=track_history)
+    raise NotImplementedError("Rust backend required")
+
+def QO_Rao_algorithm(bounds, num_iterations, population_size, num_variables, objective_func, constraints=None, variant="Rao1", track_history=True):
+    """Quasi-Oppositional Rao (Rao & Saroj 2020, JCDE). variant ∈ {Rao1, Rao2, Rao3}."""
+    if RUST_AVAILABLE:
+        return _run_rust_solver(rust_opt.solve_qo_rao, bounds, num_iterations, population_size, objective_func, constraints, variant=variant, track_history=track_history)
+    raise NotImplementedError("Rust backend required")
