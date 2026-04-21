@@ -1,5 +1,8 @@
 # Optimization Algorithms by Prof. R.V. Rao
 
+![Language](https://img.shields.io/badge/language-JavaScript-F7DF1E)
+
+
 This package implements several powerful optimization algorithms developed by Prof. Ravipudi Venkata Rao:
 - **BMR (Best-Mean-Random) Algorithm**
 - **BWR (Best-Worst-Random) Algorithm**

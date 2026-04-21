@@ -4,8 +4,8 @@ build-backend = "maturin"
 
 [project]
 name = "rao-algorithms"
-version = "0.9.3"
-description = "High-performance optimization algorithms by Prof. R.V. Rao (Jaya, Rao, TLBO) backed by Rust"
+version = "0.10.0"
+description = "High-performance metaphor-free optimization algorithms by Prof. R.V. Rao (Jaya, Rao-1/2/3, TLBO, BMR, BWR, BMWR, QOJaya, ITLBO, GOTLBO, SAMP-Jaya, EHR-Jaya, QO-Rao, SAPHR, MO-BMR/BWR/BMWR, MO-Rao+DE, NSGA-II) backed by Rust"
 authors = [
     { name = "Sandeep Kunkunuru", email = "sandeep.kunkunuru@gmail.com" }
 ]
