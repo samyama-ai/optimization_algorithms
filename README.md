@@ -2,6 +2,8 @@
 
 ![Language](https://img.shields.io/badge/language-JavaScript-F7DF1E)
 
+> Part of the **Samyama** ecosystem. Algorithms are canonically maintained in Rust at [samyama-ai/samyama-graph](https://github.com/samyama-ai/samyama-graph) (`crates/samyama-optimization/`).
+> This repo is the PyPI distribution (`pip install rao-algorithms`) with PyO3 bindings that wrap the same Rust implementations.
 
 This package implements several powerful optimization algorithms developed by Prof. Ravipudi Venkata Rao:
 - **BMR (Best-Mean-Random) Algorithm**
