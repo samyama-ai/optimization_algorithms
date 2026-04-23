@@ -4,8 +4,9 @@ Welcome to the comprehensive documentation for the BMR and BWR optimization algo
 
 ## Interactive Visualization
 
-Explore these algorithms through our interactive web application:
-**[Rao Optimization Algorithms Visualizer](https://vaidhyamegha.github.io/optimization_algorithms/)**
+For an interactive web UI to run and compare these solvers, use the
+**Optimization** section in [Samyama Insight](https://github.com/VaidhyaMegha/samyama-insight),
+which talks to the `/optimize/*` endpoints on `samyama-graph` v1.1.0+.
 
 ## Contents
 

@@ -20,8 +20,11 @@ These algorithms are designed to solve both **constrained** and **unconstrained*
 
 ## Interactive Visualization
 
-Explore these algorithms through our interactive web application:
-**[Rao Optimization Algorithms Visualizer](https://vaidhyamegha.github.io/optimization_algorithms/)**
+For an interactive web UI to run and compare these solvers (live convergence
+charts, Pareto fronts, paper references), use the **Optimization** section in
+[Samyama Insight](https://github.com/VaidhyaMegha/samyama-insight) — it talks
+to the `/optimize/*` HTTP endpoints exposed by `samyama-graph` v1.1.0+ and
+covers the full Rao algorithm family plus baselines (PSO, DE, GA, NSGA-II).
 
 ## Features
 

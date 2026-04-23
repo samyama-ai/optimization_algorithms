@@ -1,9 +1,6 @@
 # Default owners for everything in the repo
 * @MandarapuMadhulatha @sandeepkunkunuru @vinod-dega
 
-# Frontend code ownership
-/frontend/ @MandarapuMadhulatha @sandeepkunkunuru @vinod-dega
-
 # Python implementation ownership
 *.py @MandarapuMadhulatha @sandeepkunkunuru @vinod-dega
 
